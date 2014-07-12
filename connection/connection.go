@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"log"
-	"time"
 	"strings"
+	"time"
 )
 
 const HostExpirationSeconds int = 10 * 24 * 60 * 60 // 10 Days
@@ -33,12 +33,12 @@ type RedisConnection struct {
 func (self *RedisConnection) GetHost(name string) *Host {
 	host := Host{Hostname: name}
 
-    if self.HostExist(name) {
-        data, err := redis.Values(self.Do("HGETALL", host.Hostname))
-        HandleErr(err)
+	if self.HostExist(name) {
+		data, err := redis.Values(self.Do("HGETALL", host.Hostname))
+		HandleErr(err)
 
-        HandleErr(redis.ScanStruct(data, &host))
-    }
+		HandleErr(redis.ScanStruct(data, &host))
+	}
 
 	return &host
 }
@@ -74,9 +74,9 @@ func (self *Host) GenerateAndSetToken() {
 
 // Returns true when this host has a IPv4 Address and false if IPv6
 func (self *Host) IsIPv4() bool {
-    if strings.Contains(self.Ip, ".") {
-        return true
-    }
+	if strings.Contains(self.Ip, ".") {
+		return true
+	}
 
-    return False
+	return false
 }
