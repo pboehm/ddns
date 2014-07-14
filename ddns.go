@@ -7,6 +7,7 @@ import (
 	"github.com/pboehm/ddns/connection"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"strings"
 )
@@ -98,7 +99,7 @@ func RunWebService() {
 			return
 		}
 
-		ip, _, err := net.SplitHostPort(c.Req.RemoteAddr)
+		ip, err := GetRemoteAddr(c.Req)
 		if err != nil {
 			c.String(500, "You sender IP address is not in the right format")
 		}
@@ -110,6 +111,20 @@ func RunWebService() {
 	})
 
 	r.Run(":8080")
+}
+
+// Get the Remote Address of the client. At First we try to get the
+// X-Forwarded-For Header which holds the IP if we are behind a proxy,
+// otherwise the RemoteAddr is used
+func GetRemoteAddr(req *http.Request) (string, error) {
+	header_data, ok := req.Header["X-Forwarded-For"]
+
+	if ok {
+		return header_data[0], nil
+	} else {
+		ip, _, err := net.SplitHostPort(req.RemoteAddr)
+		return ip, err
+	}
 }
 
 func main() {
