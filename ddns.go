@@ -8,6 +8,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"html/template"
 	"os"
 	"strings"
 )
@@ -63,6 +64,19 @@ func RunWebService() {
 	defer conn.Close()
 
 	r := gin.Default()
+
+    // Add index template from bindata
+    index_content, err := Asset("templates/index.html")
+    HandleErr(err)
+
+    html, err := template.New("index.html").Parse(string(index_content))
+    HandleErr(err)
+    r.HTMLTemplates = html
+
+    r.GET("/", func (g *gin.Context) {
+        g.HTML(200, "index.html", nil)
+    })
+
 	r.GET("/new/:hostname", func(c *gin.Context) {
 		hostname := c.Params.ByName("hostname")
 
