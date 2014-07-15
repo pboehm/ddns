@@ -121,39 +121,20 @@
                 <hr />
 
                 <form class="form-inline" role="form">
-                    <div class="form-group">
+                    <div id="hostname_input" class="form-group">
                         <div class="input-group">
-                            <input class="form-control input-lg" type="text" placeholder="my-own-hostname">
+                            <input id="hostname" class="form-control input-lg" type="text" placeholder="my-own-hostname">
                             <div class="input-group-addon input-lg">{{.domain}}</div>
                         </div>
                     </div>
                 </form>
+
+                <hr />
+
+                <input type="button" id="register" class="btn btn-primary disabled" value="Register Host" />
             </div>
 
-            <div class="row marketing">
-
-                <div class="col-lg-6">
-                    <h4>Own Domain with NS delegation</h4>
-                    <p>You have to own a domain where your Registrar allows you
-                    to add NS-Records for Subdomains, as this is handled by
-                    DDNS.</p>
-
-                    <h4>Running Server</h4>
-                    <p>You should have a server running continously. Go, Redis
-                    and PowerDNS have to be supported by the running OS.</p>
-                </div>
-
-                <div class="col-lg-6">
-                    <h4>Redis</h4>
-                    <p>Redis is used as the data store with features like
-                    automatic expiration of hosts ...</p>
-
-                    <h4>PowerDNS</h4>
-                    <p>PowerDNS is the DNS server software used by DDNS to handle
-                    the DNS requests for your subdomain. DDNS provides a suitable
-                    backend software for PowerDNS.</p>
-                </div>
-            </div>
+            <div id="command_output"></div>
 
             <div class="footer">
                 <p>&copy; Philipp Böhm</p>
@@ -166,5 +147,55 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
         <!-- Latest compiled and minified JavaScript -->
         <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+
+        <script type="text/javascript" charset="utf-8">
+
+            function isValid() {
+                $('#register').removeClass("disabled");
+                $('#hostname_input').removeClass("has-error");
+                $('#hostname_input').addClass("has-success");
+            }
+
+            function isNotValid(argument) {
+                $('#register').addClass("disabled");
+                $('#hostname_input').removeClass("has-success");
+                $('#hostname_input').addClass("has-error");
+            }
+
+            function validate() {
+                var hostname = $('#hostname').val();
+
+                $.getJSON("/available/" + hostname + "/", function( data ) {
+                    if (data.available) {
+                        isValid();
+                    } else {
+                        isNotValid();
+                    }
+                }).error(function(){ isNotValid(); });
+            }
+
+            $(document).ready(function() {
+                var timer = null;
+                $('#hostname').on('keydown', function () {
+                    clearTimeout(timer);
+                    timer = setTimeout(validate, 1000)
+                });
+
+
+                $('#register').click(function() {
+                    var hostname = $("#hostname").val();
+
+                    $.getJSON("/new/" + hostname + "/", function( data ) {
+                        console.log(data);
+
+                        var host = location.protocol + '//' + location.host;
+
+                        $("#command_output").append(
+                            "<pre>curl \"" + host +
+                            data.update_link + "\"</pre>");
+                    })
+                });
+            });
+        </script>
     </body>
 </html>

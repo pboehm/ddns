@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"net"
 	"net/http"
+	"regexp"
 )
 
 func RunWebService(conn *connection.RedisConnection) {
@@ -18,15 +19,20 @@ func RunWebService(conn *connection.RedisConnection) {
 	})
 
 	r.GET("/available/:hostname", func(c *gin.Context) {
-		hostname := c.Params.ByName("hostname")
+		hostname, valid := ValidHostname(c.Params.ByName("hostname"))
 
 		c.JSON(200, gin.H{
-			"available": !conn.HostExist(hostname),
+			"available": valid && !conn.HostExist(hostname),
 		})
 	})
 
 	r.GET("/new/:hostname", func(c *gin.Context) {
-		hostname := c.Params.ByName("hostname")
+		hostname, valid := ValidHostname(c.Params.ByName("hostname"))
+
+		if !valid {
+			c.JSON(404, gin.H{"error": "This hostname is not valid"})
+			return
+		}
 
 		if conn.HostExist(hostname) {
 			c.JSON(403, gin.H{
@@ -48,8 +54,13 @@ func RunWebService(conn *connection.RedisConnection) {
 	})
 
 	r.GET("/update/:hostname/:token", func(c *gin.Context) {
-		hostname := c.Params.ByName("hostname")
+		hostname, valid := ValidHostname(c.Params.ByName("hostname"))
 		token := c.Params.ByName("token")
+
+		if !valid {
+			c.JSON(404, gin.H{"error": "This hostname is not valid"})
+			return
+		}
 
 		if !conn.HostExist(hostname) {
 			c.JSON(404, gin.H{
@@ -110,4 +121,10 @@ func BuildTemplate() *template.Template {
 	HandleErr(err)
 
 	return html
+}
+
+func ValidHostname(host string) (string, bool) {
+	valid, _ := regexp.Match("^[a-z0-9]{1,32}$", []byte(host))
+
+	return host, valid
 }
