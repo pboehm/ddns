@@ -10,16 +10,8 @@ import (
 )
 
 func RunWebService(conn *connection.RedisConnection) {
-
-	// Add index template from bindata
-	index_content, err := Asset("templates/index.html")
-	HandleErr(err)
-
-	html, err := template.New("index.html").Parse(string(index_content))
-	HandleErr(err)
-
 	r := gin.Default()
-	r.HTMLTemplates = html
+	r.HTMLTemplates = BuildTemplate()
 
 	r.GET("/", func(g *gin.Context) {
 		g.HTML(200, "index.html", gin.H{"domain": DdnsDomain})
@@ -37,7 +29,9 @@ func RunWebService(conn *connection.RedisConnection) {
 		hostname := c.Params.ByName("hostname")
 
 		if conn.HostExist(hostname) {
-			c.String(403, "This hostname has already been registered.")
+			c.JSON(403, gin.H{
+				"error": "This hostname has already been registered.",
+			})
 			return
 		}
 
@@ -58,31 +52,39 @@ func RunWebService(conn *connection.RedisConnection) {
 		token := c.Params.ByName("token")
 
 		if !conn.HostExist(hostname) {
-			c.String(404,
-				"This hostname has not been registered or is expired.")
+			c.JSON(404, gin.H{
+				"error": "This hostname has not been registered or is expired.",
+			})
 			return
 		}
 
 		host := conn.GetHost(hostname)
 
 		if host.Token != token {
-			c.String(403,
-				"You have supplied the wrong token to manipulate this host")
+			c.JSON(403, gin.H{
+				"error": "You have supplied the wrong token to manipulate this host",
+			})
 			return
 		}
 
 		ip, err := GetRemoteAddr(c.Req)
 		if err != nil {
-			c.String(500, "Your sender IP address is not in the right format")
+			c.JSON(400, gin.H{
+				"error": "Your sender IP address is not in the right format",
+			})
+			return
 		}
 
 		host.Ip = ip
 		conn.SaveHost(host)
 
-		c.String(200, fmt.Sprintf("Your current IP is %s", ip))
+		c.JSON(200, gin.H{
+			"current_ip": ip,
+			"status":     "Successfuly updated",
+		})
 	})
 
-	r.Run(":8080")
+	r.Run(DdnsWebListenSocket)
 }
 
 // Get the Remote Address of the client. At First we try to get the
@@ -97,4 +99,15 @@ func GetRemoteAddr(req *http.Request) (string, error) {
 		ip, _, err := net.SplitHostPort(req.RemoteAddr)
 		return ip, err
 	}
+}
+
+// Get index template from bindata
+func BuildTemplate() *template.Template {
+	index_content, err := Asset("templates/index.html")
+	HandleErr(err)
+
+	html, err := template.New("index.html").Parse(string(index_content))
+	HandleErr(err)
+
+	return html
 }

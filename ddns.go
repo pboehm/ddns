@@ -14,12 +14,16 @@ func HandleErr(err error) {
 }
 
 var (
-	DdnsDomain string
+	DdnsDomain          string
+	DdnsWebListenSocket string
 )
 
 func init() {
 	flag.StringVar(&DdnsDomain, "domain", "",
 		"The subdomain which should be handled by DDNS")
+
+	flag.StringVar(&DdnsWebListenSocket, "listen", ":8080",
+		"Which socket should the web service use to bind itself")
 }
 
 func ValidateCommandArgs() {
@@ -44,7 +48,7 @@ func PrepareForExecution() string {
 }
 
 func main() {
-    cmd := PrepareForExecution()
+	cmd := PrepareForExecution()
 
 	conn := connection.OpenConnection()
 	defer conn.Close()
