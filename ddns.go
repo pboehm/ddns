@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pboehm/ddns/connection"
@@ -58,7 +59,6 @@ func RunBackend() {
 
 		fmt.Printf("END\n")
 	}
-
 }
 
 func RunWebService() {
@@ -76,16 +76,16 @@ func RunWebService() {
 	r.HTMLTemplates = html
 
 	r.GET("/", func(g *gin.Context) {
-        g.HTML(200, "index.html", gin.H{ "domain": DdnsDomain })
+		g.HTML(200, "index.html", gin.H{"domain": DdnsDomain})
 	})
 
 	r.GET("/available/:hostname", func(c *gin.Context) {
 		hostname := c.Params.ByName("hostname")
 
-        c.JSON(200, gin.H{
-            "available": ! conn.HostExist(hostname),
-        })
-    })
+		c.JSON(200, gin.H{
+			"available": !conn.HostExist(hostname),
+		})
+	})
 
 	r.GET("/new/:hostname", func(c *gin.Context) {
 		hostname := c.Params.ByName("hostname")
@@ -100,11 +100,11 @@ func RunWebService() {
 
 		conn.SaveHost(host)
 
-        c.JSON(200, gin.H{
-            "hostname": host.Hostname,
-            "token": host.Token,
-            "update_link": fmt.Sprintf("/update/%s/%s", host.Hostname, host.Token),
-        })
+		c.JSON(200, gin.H{
+			"hostname":    host.Hostname,
+			"token":       host.Token,
+			"update_link": fmt.Sprintf("/update/%s/%s", host.Hostname, host.Token),
+		})
 	})
 
 	r.GET("/update/:hostname/:token", func(c *gin.Context) {
@@ -153,29 +153,28 @@ func GetRemoteAddr(req *http.Request) (string, error) {
 	}
 }
 
-func ExtractConfigVariables() {
+func ValidateCommandArgs() {
+	if DdnsDomain == "" {
+		log.Fatal("You have to supply the domain via --domain=DOMAIN")
+	} else if !strings.HasPrefix(DdnsDomain, ".") {
+		// get the domain in the right format
+		DdnsDomain = "." + DdnsDomain
+	}
+}
 
-    // get the domain in the right format
-    DdnsDomain = os.Getenv("DDNS_DOMAIN")
-    if DdnsDomain == "" {
-        log.Fatal(
-            "You have to set your Subdomain through the DDNS_DOMAIN env variable")
-    }
-    if ! strings.HasPrefix(DdnsDomain, ".") {
-        DdnsDomain = "." + DdnsDomain
-    }
-
+func init() {
+	flag.StringVar(&DdnsDomain, "domain", "",
+		"The subdomain which should be handled by DDNS")
 }
 
 func main() {
+	flag.Parse()
+	ValidateCommandArgs()
 
-	if len(os.Args) < 2 {
+	if len(flag.Args()) != 1 {
 		usage()
 	}
-
-	ExtractConfigVariables()
-
-	cmd := os.Args[1]
+	cmd := flag.Args()[0]
 
 	switch cmd {
 	case "backend":
