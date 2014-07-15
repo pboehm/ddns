@@ -44,7 +44,7 @@ func PrepareForExecution() string {
 }
 
 func main() {
-	cmd = PrepareForExecution()
+    cmd := PrepareForExecution()
 
 	conn := connection.OpenConnection()
 	defer conn.Close()
