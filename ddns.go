@@ -13,6 +13,8 @@ import (
 	"strings"
 )
 
+var DdnsDomain string
+
 func HandleErr(err error) {
 	if err != nil {
 		log.Fatal(err)
@@ -74,8 +76,16 @@ func RunWebService() {
 	r.HTMLTemplates = html
 
 	r.GET("/", func(g *gin.Context) {
-		g.HTML(200, "index.html", nil)
+        g.HTML(200, "index.html", gin.H{ "domain": DdnsDomain })
 	})
+
+	r.GET("/available/:hostname", func(c *gin.Context) {
+		hostname := c.Params.ByName("hostname")
+
+        c.JSON(200, gin.H{
+            "available": ! conn.HostExist(hostname),
+        })
+    })
 
 	r.GET("/new/:hostname", func(c *gin.Context) {
 		hostname := c.Params.ByName("hostname")
@@ -90,9 +100,11 @@ func RunWebService() {
 
 		conn.SaveHost(host)
 
-		c.String(200, fmt.Sprintf(
-			"Go to /update/%s/%s for updating your IP address",
-			host.Hostname, host.Token))
+        c.JSON(200, gin.H{
+            "hostname": host.Hostname,
+            "token": host.Token,
+            "update_link": fmt.Sprintf("/update/%s/%s", host.Hostname, host.Token),
+        })
 	})
 
 	r.GET("/update/:hostname/:token", func(c *gin.Context) {
@@ -115,7 +127,7 @@ func RunWebService() {
 
 		ip, err := GetRemoteAddr(c.Req)
 		if err != nil {
-			c.String(500, "You sender IP address is not in the right format")
+			c.String(500, "Your sender IP address is not in the right format")
 		}
 
 		host.Ip = ip
@@ -141,11 +153,27 @@ func GetRemoteAddr(req *http.Request) (string, error) {
 	}
 }
 
+func ExtractConfigVariables() {
+
+    // get the domain in the right format
+    DdnsDomain = os.Getenv("DDNS_DOMAIN")
+    if DdnsDomain == "" {
+        log.Fatal(
+            "You have to set your Subdomain through the DDNS_DOMAIN env variable")
+    }
+    if ! strings.HasPrefix(DdnsDomain, ".") {
+        DdnsDomain = "." + DdnsDomain
+    }
+
+}
+
 func main() {
 
 	if len(os.Args) < 2 {
 		usage()
 	}
+
+	ExtractConfigVariables()
 
 	cmd := os.Args[1]
 
