@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pboehm/ddns/connection"
+	"html/template"
 	"log"
 	"net"
 	"net/http"
-	"html/template"
 	"os"
 	"strings"
 )
@@ -63,19 +63,19 @@ func RunWebService() {
 	conn := connection.OpenConnection()
 	defer conn.Close()
 
+	// Add index template from bindata
+	index_content, err := Asset("templates/index.html")
+	HandleErr(err)
+
+	html, err := template.New("index.html").Parse(string(index_content))
+	HandleErr(err)
+
 	r := gin.Default()
+	r.HTMLTemplates = html
 
-    // Add index template from bindata
-    index_content, err := Asset("templates/index.html")
-    HandleErr(err)
-
-    html, err := template.New("index.html").Parse(string(index_content))
-    HandleErr(err)
-    r.HTMLTemplates = html
-
-    r.GET("/", func (g *gin.Context) {
-        g.HTML(200, "index.html", nil)
-    })
+	r.GET("/", func(g *gin.Context) {
+		g.HTML(200, "index.html", nil)
+	})
 
 	r.GET("/new/:hostname", func(c *gin.Context) {
 		hostname := c.Params.ByName("hostname")

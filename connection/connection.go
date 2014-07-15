@@ -23,11 +23,24 @@ func OpenConnection() *RedisConnection {
 		log.Fatal(conn_err)
 	}
 
-	return &RedisConnection{conn}
+	c := &RedisConnection{conn}
+	go c.periodicKeepAlive()
+
+	return c
 }
 
 type RedisConnection struct {
 	redis.Conn
+}
+
+// Every minute send a Ping signal to redis so that we dont run into a timeout
+func (self *RedisConnection) periodicKeepAlive() {
+	c := time.Tick(1 * time.Minute)
+
+	for _ = range c {
+		_, err := self.Do("PING")
+		HandleErr(err)
+	}
 }
 
 func (self *RedisConnection) GetHost(name string) *Host {
