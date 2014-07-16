@@ -3,14 +3,13 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/pboehm/ddns/connection"
 	"os"
 	"strings"
 )
 
 // This function implements the PowerDNS-Pipe-Backend protocol and generates
 // the response data it possible
-func RunBackend(conn *connection.RedisConnection) {
+func RunBackend(conn *RedisConnection) {
 
 	// handshake with PowerDNS
 	fmt.Printf("OK\tDDNS Go Backend\n")
@@ -25,7 +24,7 @@ func RunBackend(conn *connection.RedisConnection) {
 	}
 }
 
-func HandleRequest(line string, conn *connection.RedisConnection) {
+func HandleRequest(line string, conn *RedisConnection) {
 	defer fmt.Printf("END\n")
 
 	parts := strings.Split(line, "\t")

@@ -3,14 +3,13 @@ package main
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/pboehm/ddns/connection"
 	"html/template"
 	"net"
 	"net/http"
 	"regexp"
 )
 
-func RunWebService(conn *connection.RedisConnection) {
+func RunWebService(conn *RedisConnection) {
 	r := gin.Default()
 	r.HTMLTemplates = BuildTemplate()
 
@@ -41,7 +40,7 @@ func RunWebService(conn *connection.RedisConnection) {
 			return
 		}
 
-		host := &connection.Host{Hostname: hostname, Ip: "127.0.0.1"}
+		host := &Host{Hostname: hostname, Ip: "127.0.0.1"}
 		host.GenerateAndSetToken()
 
 		conn.SaveHost(host)

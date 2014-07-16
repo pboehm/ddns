@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"github.com/pboehm/ddns/connection"
 	"log"
 	"strings"
 )
@@ -54,7 +53,7 @@ func PrepareForExecution() string {
 func main() {
 	cmd := PrepareForExecution()
 
-	conn := connection.OpenConnection(DdnsRedisHost)
+	conn := OpenConnection(DdnsRedisHost)
 	defer conn.Close()
 
 	switch cmd {

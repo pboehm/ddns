@@ -1,21 +1,14 @@
-package connection
+package main
 
 import (
 	"crypto/sha1"
 	"fmt"
 	"github.com/garyburd/redigo/redis"
-	"log"
 	"strings"
 	"time"
 )
 
 const HostExpirationSeconds int = 10 * 24 * 60 * 60 // 10 Days
-
-func HandleErr(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
-}
 
 type RedisConnection struct {
 	*redis.Pool
