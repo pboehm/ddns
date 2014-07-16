@@ -17,37 +17,43 @@ func HandleErr(err error) {
 	}
 }
 
-func OpenConnection() *RedisConnection {
-	conn, conn_err := redis.Dial("tcp", ":6379")
-	if conn_err != nil {
-		log.Fatal(conn_err)
-	}
-
-	c := &RedisConnection{conn}
-	go c.periodicKeepAlive()
-
-	return c
-}
-
 type RedisConnection struct {
-	redis.Conn
+	*redis.Pool
 }
 
-// Every minute send a Ping signal to redis so that we dont run into a timeout
-func (self *RedisConnection) periodicKeepAlive() {
-	c := time.Tick(1 * time.Minute)
+func OpenConnection(server string) *RedisConnection {
+	return &RedisConnection{newPool(server)}
+}
 
-	for _ = range c {
-		_, err := self.Do("PING")
-		HandleErr(err)
+func newPool(server string) *redis.Pool {
+	return &redis.Pool{
+		MaxIdle: 3,
+
+		IdleTimeout: 240 * time.Second,
+
+		Dial: func() (redis.Conn, error) {
+			c, err := redis.Dial("tcp", server)
+			if err != nil {
+				return nil, err
+			}
+			return c, err
+		},
+
+		TestOnBorrow: func(c redis.Conn, t time.Time) error {
+			_, err := c.Do("PING")
+			return err
+		},
 	}
 }
 
 func (self *RedisConnection) GetHost(name string) *Host {
+	conn := self.Get()
+	defer conn.Close()
+
 	host := Host{Hostname: name}
 
 	if self.HostExist(name) {
-		data, err := redis.Values(self.Do("HGETALL", host.Hostname))
+		data, err := redis.Values(conn.Do("HGETALL", host.Hostname))
 		HandleErr(err)
 
 		HandleErr(redis.ScanStruct(data, &host))
@@ -57,15 +63,21 @@ func (self *RedisConnection) GetHost(name string) *Host {
 }
 
 func (self *RedisConnection) SaveHost(host *Host) {
-	_, err := self.Do("HMSET", redis.Args{}.Add(host.Hostname).AddFlat(host)...)
+	conn := self.Get()
+	defer conn.Close()
+
+	_, err := conn.Do("HMSET", redis.Args{}.Add(host.Hostname).AddFlat(host)...)
 	HandleErr(err)
 
-	_, err = self.Do("EXPIRE", host.Hostname, HostExpirationSeconds)
+	_, err = conn.Do("EXPIRE", host.Hostname, HostExpirationSeconds)
 	HandleErr(err)
 }
 
 func (self *RedisConnection) HostExist(name string) bool {
-	exists, err := redis.Bool(self.Do("EXISTS", name))
+	conn := self.Get()
+	defer conn.Close()
+
+	exists, err := redis.Bool(conn.Do("EXISTS", name))
 	HandleErr(err)
 
 	return exists

@@ -16,6 +16,7 @@ func HandleErr(err error) {
 var (
 	DdnsDomain          string
 	DdnsWebListenSocket string
+	DdnsRedisHost       string
 )
 
 func init() {
@@ -24,6 +25,9 @@ func init() {
 
 	flag.StringVar(&DdnsWebListenSocket, "listen", ":8080",
 		"Which socket should the web service use to bind itself")
+
+	flag.StringVar(&DdnsRedisHost, "redis", ":6379",
+		"The Redis socket that should be used")
 }
 
 func ValidateCommandArgs() {
@@ -50,7 +54,7 @@ func PrepareForExecution() string {
 func main() {
 	cmd := PrepareForExecution()
 
-	conn := connection.OpenConnection()
+	conn := connection.OpenConnection(DdnsRedisHost)
 	defer conn.Close()
 
 	switch cmd {
