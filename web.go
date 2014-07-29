@@ -11,7 +11,7 @@ import (
 
 func RunWebService(conn *RedisConnection) {
 	r := gin.Default()
-	r.HTMLTemplates = BuildTemplate()
+	r.SetHTMLTemplate(BuildTemplate())
 
 	r.GET("/", func(g *gin.Context) {
 		g.HTML(200, "index.html", gin.H{"domain": DdnsDomain})
@@ -77,7 +77,7 @@ func RunWebService(conn *RedisConnection) {
 			return
 		}
 
-		ip, err := GetRemoteAddr(c.Req)
+		ip, err := GetRemoteAddr(c.Request)
 		if err != nil {
 			c.JSON(400, gin.H{
 				"error": "Your sender IP address is not in the right format",
