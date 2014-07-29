@@ -27,6 +27,10 @@ func RunBackend(conn *RedisConnection) {
 func HandleRequest(line string, conn *RedisConnection) {
 	defer fmt.Printf("END\n")
 
+	if Verbose {
+		fmt.Printf("LOG\t'%s'\n", line)
+	}
+
 	parts := strings.Split(line, "\t")
 	if len(parts) != 6 {
 		return

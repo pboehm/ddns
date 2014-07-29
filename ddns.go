@@ -16,6 +16,7 @@ var (
 	DdnsDomain          string
 	DdnsWebListenSocket string
 	DdnsRedisHost       string
+	Verbose             bool
 )
 
 func init() {
@@ -27,6 +28,9 @@ func init() {
 
 	flag.StringVar(&DdnsRedisHost, "redis", ":6379",
 		"The Redis socket that should be used")
+
+	flag.BoolVar(&Verbose, "verbose", false,
+		"Be more verbose")
 }
 
 func ValidateCommandArgs() {
