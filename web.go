@@ -113,10 +113,7 @@ func GetRemoteAddr(req *http.Request) (string, error) {
 
 // Get index template from bindata
 func BuildTemplate() *template.Template {
-	index_content, err := Asset("templates/index.html")
-	HandleErr(err)
-
-	html, err := template.New("index.html").Parse(string(index_content))
+	html, err := template.New("index.html").Parse(indexTemplate)
 	HandleErr(err)
 
 	return html
