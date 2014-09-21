@@ -62,7 +62,7 @@ func HandleRequest(line string, conn *RedisConnection) responder {
 			DdnsSoaFqdn, getSoaSerial())
 
 	case "NS":
-		response = DdnsSoaFqdn
+		response = fmt.Sprintf("%s.", DdnsSoaFqdn)
 
 	case "A":
 	case "ANY":
