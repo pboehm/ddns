@@ -12,10 +12,16 @@ func HandleErr(err error) {
 	}
 }
 
+const (
+	CmdBackend string = "backend"
+	CmdWeb     string = "web"
+)
+
 var (
 	DdnsDomain          string
 	DdnsWebListenSocket string
 	DdnsRedisHost       string
+	DdnsSoaFqdn         string
 	Verbose             bool
 )
 
@@ -29,28 +35,37 @@ func init() {
 	flag.StringVar(&DdnsRedisHost, "redis", ":6379",
 		"The Redis socket that should be used")
 
+	flag.StringVar(&DdnsSoaFqdn, "soa_fqdn", "",
+		"The FQDN of the DNS server which is returned as a SOA record")
+
 	flag.BoolVar(&Verbose, "verbose", false,
 		"Be more verbose")
 }
 
-func ValidateCommandArgs() {
+func ValidateCommandArgs(cmd string) {
 	if DdnsDomain == "" {
 		log.Fatal("You have to supply the domain via --domain=DOMAIN")
 	} else if !strings.HasPrefix(DdnsDomain, ".") {
 		// get the domain in the right format
 		DdnsDomain = "." + DdnsDomain
 	}
+
+	if cmd == CmdBackend {
+		if DdnsSoaFqdn == "" {
+			log.Fatal("You have to supply the server FQDN via --soa_fqdn=FQDN")
+		}
+	}
 }
 
 func PrepareForExecution() string {
 	flag.Parse()
-	ValidateCommandArgs()
 
 	if len(flag.Args()) != 1 {
 		usage()
 	}
 	cmd := flag.Args()[0]
 
+	ValidateCommandArgs(cmd)
 	return cmd
 }
 
@@ -61,10 +76,10 @@ func main() {
 	defer conn.Close()
 
 	switch cmd {
-	case "backend":
+	case CmdBackend:
 		log.Printf("Starting PDNS Backend\n")
 		RunBackend(conn)
-	case "web":
+	case CmdWeb:
 		log.Printf("Starting Web Service\n")
 		RunWebService(conn)
 	default:

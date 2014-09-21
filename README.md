@@ -50,11 +50,11 @@ host.
     $ sudo vim /etc/powerdns/pdns.d/pipe.conf
 
 `pipe.conf` should have the following content. Please adjust the path of `ddns`
-and the supplied domain name `--domain=sub.example.com`:
+and the values supplied to `--domain` and `--soa_fqdn`:
 
     launch=pipe
     pipebackend-abi-version=1
-    pipe-command=/home/user/gocode/bin/ddns --domain=sub.example.com backend
+    pipe-command=/home/user/gocode/bin/ddns --soa_fqdn=dns.example.com --domain=sub.example.com backend
 
 Then restart `pdns`:
 
