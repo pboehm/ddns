@@ -1,0 +1,43 @@
+version: '2'
+
+volumes:
+  ddns:
+
+services:
+  ddns:
+    restart: unless-stopped
+    build:
+      context: ..
+      dockerfile: docker/ddns/Dockerfile
+    volumes:
+      - ddns:/go/bin/
+
+  ddns-web:
+    restart: unless-stopped
+    build:
+      context: web/
+      dockerfile: Dockerfile
+    depends_on:
+      - redis
+    volumes_from:
+      - ddns
+    environment:
+      DDNS_DOMAIN: d.example.net
+
+  ddns-powerdns:
+    restart: unless-stopped
+    build:
+      context: powerdns/
+      dockerfile: Dockerfile
+    depends_on:
+      - redis
+    volumes_from:
+      - ddns
+    environment:
+      DDNS_DOMAIN: d.example.net
+      DDNS_SOA_DOMAIN: soa.example.net
+      DDNS_VERBOSE: --verbose
+
+  redis:
+    restart: unless-stopped
+    image: redis:latest

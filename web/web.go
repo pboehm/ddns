@@ -4,7 +4,7 @@ import (
 	"../config"
 	"../hosts"
 	"fmt"
-	"github.com/gin-gonic/gin"
+	"gopkg.in/gin-gonic/gin.v1"
 	"html/template"
 	"log"
 	"net"
