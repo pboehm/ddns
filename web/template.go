@@ -1,4 +1,4 @@
-package main
+package web
 
 const indexTemplate string = `
 <!DOCTYPE html>
