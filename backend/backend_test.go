@@ -1,11 +1,11 @@
 package backend
 
 import (
-	c "github.com/pboehm/ddns/config"
-	h "github.com/pboehm/ddns/hosts"
 	"bufio"
 	"bytes"
 	"errors"
+	c "github.com/pboehm/ddns/config"
+	h "github.com/pboehm/ddns/hosts"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"

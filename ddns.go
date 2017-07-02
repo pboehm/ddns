@@ -1,11 +1,11 @@
 package main
 
 import (
+	"flag"
 	"github.com/pboehm/ddns/backend"
 	"github.com/pboehm/ddns/config"
 	"github.com/pboehm/ddns/hosts"
 	"github.com/pboehm/ddns/web"
-	"flag"
 	"log"
 	"os"
 	"strings"

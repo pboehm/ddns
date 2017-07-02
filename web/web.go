@@ -1,9 +1,9 @@
 package web
 
 import (
+	"fmt"
 	"github.com/pboehm/ddns/config"
 	"github.com/pboehm/ddns/hosts"
-	"fmt"
 	"gopkg.in/gin-gonic/gin.v1"
 	"html/template"
 	"log"

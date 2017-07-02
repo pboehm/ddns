@@ -1,8 +1,8 @@
 package hosts
 
 import (
-	"github.com/pboehm/ddns/config"
 	"github.com/garyburd/redigo/redis"
+	"github.com/pboehm/ddns/config"
 	"time"
 )
 

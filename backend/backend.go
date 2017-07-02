@@ -1,11 +1,11 @@
 package backend
 
 import (
-	"github.com/pboehm/ddns/config"
-	"github.com/pboehm/ddns/hosts"
 	"bufio"
 	"errors"
 	"fmt"
+	"github.com/pboehm/ddns/config"
+	"github.com/pboehm/ddns/hosts"
 	"io"
 	"strings"
 	"time"
