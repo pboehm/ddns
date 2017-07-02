@@ -5,7 +5,7 @@ volumes:
 
 services:
   ddns:
-    restart: unless-stopped
+    restart: no
     build:
       context: ..
       dockerfile: docker/ddns/Dockerfile

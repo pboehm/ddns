@@ -3,4 +3,4 @@ MAINTAINER Philipp Böhm <philipp@pboehm.org>
 
 ENV GIN_MODE release
 
-CMD /go/bin/app --domain=${DDNS_DOMAIN} --redis=redis:6379 web
+CMD /go/bin/ddns --domain=${DDNS_DOMAIN} --redis=redis:6379 web
