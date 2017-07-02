@@ -1,8 +1,8 @@
 package backend
 
 import (
-	"../config"
-	"../hosts"
+	"github.com/pboehm/ddns/config"
+	"github.com/pboehm/ddns/hosts"
 	"bufio"
 	"errors"
 	"fmt"

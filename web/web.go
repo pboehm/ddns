@@ -1,8 +1,8 @@
 package web
 
 import (
-	"../config"
-	"../hosts"
+	"github.com/pboehm/ddns/config"
+	"github.com/pboehm/ddns/hosts"
 	"fmt"
 	"gopkg.in/gin-gonic/gin.v1"
 	"html/template"

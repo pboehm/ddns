@@ -1,8 +1,8 @@
 package backend
 
 import (
-	c "../config"
-	h "../hosts"
+	c "github.com/pboehm/ddns/config"
+	h "github.com/pboehm/ddns/hosts"
 	"bufio"
 	"bytes"
 	"errors"

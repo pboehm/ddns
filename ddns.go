@@ -1,10 +1,10 @@
 package main
 
 import (
-	"./backend"
-	"./config"
-	"./hosts"
-	"./web"
+	"github.com/pboehm/ddns/backend"
+	"github.com/pboehm/ddns/config"
+	"github.com/pboehm/ddns/hosts"
+	"github.com/pboehm/ddns/web"
 	"flag"
 	"log"
 	"os"
@@ -16,7 +16,7 @@ const (
 	CmdWeb     string = "web"
 )
 
-var serviceConfig *config.Config
+var serviceConfig *config.Config = &config.Config{}
 
 func init() {
 	flag.StringVar(&serviceConfig.Domain, "domain", "",
