@@ -1,4 +1,4 @@
-FROM golang:1.7
+FROM golang:1.9
 
 WORKDIR /go/src/github.com/pboehm/ddns
 COPY . .
@@ -6,4 +6,6 @@ COPY . .
 RUN go-wrapper download   # "go get -d -v ./..."
 RUN go-wrapper install    # "go install -v ."
 
-CMD ["/bin/true"]
+ENV GIN_MODE release
+
+CMD /go/bin/ddns --domain=${DDNS_DOMAIN} --soa_fqdn=${DDNS_SOA_DOMAIN} --redis=redis:6379 web
