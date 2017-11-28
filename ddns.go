@@ -7,13 +7,7 @@ import (
 	"github.com/pboehm/ddns/hosts"
 	"github.com/pboehm/ddns/web"
 	"log"
-	"os"
 	"strings"
-)
-
-const (
-	CmdBackend string = "backend"
-	CmdWeb     string = "web"
 )
 
 var serviceConfig *config.Config = &config.Config{}
@@ -38,11 +32,7 @@ func init() {
 		"Be more verbose")
 }
 
-func usage() {
-	log.Fatal("Usage: ./ddns [backend|web]")
-}
-
-func validateCommandArgs(cmd string) {
+func validateCommandArgs() {
 	if serviceConfig.Domain == "" {
 		log.Fatal("You have to supply the domain via --domain=DOMAIN")
 	} else if !strings.HasPrefix(serviceConfig.Domain, ".") {
@@ -50,39 +40,19 @@ func validateCommandArgs(cmd string) {
 		serviceConfig.Domain = "." + serviceConfig.Domain
 	}
 
-	if cmd == CmdBackend {
-		if serviceConfig.SOAFqdn == "" {
-			log.Fatal("You have to supply the server FQDN via --soa_fqdn=FQDN")
-		}
+	if serviceConfig.SOAFqdn == "" {
+		log.Fatal("You have to supply the server FQDN via --soa_fqdn=FQDN")
 	}
-}
-
-func prepareForExecution() string {
-	flag.Parse()
-
-	if len(flag.Args()) != 1 {
-		usage()
-	}
-	cmd := flag.Args()[0]
-
-	validateCommandArgs(cmd)
-	return cmd
 }
 
 func main() {
-	cmd := prepareForExecution()
+	flag.Parse()
+	validateCommandArgs()
 
 	redis := hosts.NewRedisBackend(serviceConfig)
 	defer redis.Close()
 
-	switch cmd {
-	case CmdBackend:
-		backend.NewPowerDnsBackend(serviceConfig, redis, os.Stdin, os.Stdout).Run()
+	lookup := backend.NewHostLookup(serviceConfig, redis)
 
-	case CmdWeb:
-		web.NewWebService(serviceConfig, redis).Run()
-
-	default:
-		usage()
-	}
+	web.NewWebService(serviceConfig, redis, lookup).Run()
 }

@@ -2,6 +2,7 @@ package web
 
 import (
 	"fmt"
+	"github.com/pboehm/ddns/backend"
 	"github.com/pboehm/ddns/config"
 	"github.com/pboehm/ddns/hosts"
 	"gopkg.in/gin-gonic/gin.v1"
@@ -10,17 +11,20 @@ import (
 	"net"
 	"net/http"
 	"regexp"
+	"strings"
 )
 
 type WebService struct {
 	config *config.Config
 	hosts  hosts.HostBackend
+	lookup *backend.HostLookup
 }
 
-func NewWebService(config *config.Config, hosts hosts.HostBackend) *WebService {
+func NewWebService(config *config.Config, hosts hosts.HostBackend, lookup *backend.HostLookup) *WebService {
 	return &WebService{
 		config: config,
 		hosts:  hosts,
+		lookup: lookup,
 	}
 }
 
@@ -37,7 +41,7 @@ func (w *WebService) Run() {
 
 		if valid {
 			_, err := w.hosts.GetHost(hostname)
-			valid = err == nil
+			valid = err != nil
 		}
 
 		c.JSON(200, gin.H{
@@ -55,9 +59,9 @@ func (w *WebService) Run() {
 
 		var err error
 
-		if _, err = w.hosts.GetHost(hostname); err == nil {
+		if h, err := w.hosts.GetHost(hostname); err == nil {
 			c.JSON(403, gin.H{
-				"error": "This hostname has already been registered.",
+				"error": fmt.Sprintf("This hostname has already been registered. %v", h),
 			})
 			return
 		}
@@ -120,6 +124,25 @@ func (w *WebService) Run() {
 			"current_ip": ip,
 			"status":     "Successfuly updated",
 		})
+	})
+
+	r.GET("/dnsapi/lookup/:qname/:qtype", func(c *gin.Context) {
+		request := &backend.Request{
+			QName: strings.TrimRight(c.Param("qname"), "."),
+			QType: c.Param("qtype"),
+		}
+
+		response, err := w.lookup.Lookup(request)
+		if err == nil {
+			c.JSON(200, gin.H{
+				"result": []*backend.Response{response},
+			})
+		} else {
+			log.Printf("Error during lookup: %v", err)
+			c.JSON(200, gin.H{
+				"result": []string{},
+			})
+		}
 	})
 
 	r.Run(w.config.Listen)

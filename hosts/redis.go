@@ -1,6 +1,7 @@
 package hosts
 
 import (
+	"errors"
 	"github.com/garyburd/redigo/redis"
 	"github.com/pboehm/ddns/config"
 	"time"
@@ -49,6 +50,10 @@ func (r *RedisBackend) GetHost(name string) (*Host, error) {
 
 	if data, err = redis.Values(conn.Do("HGETALL", host.Hostname)); err != nil {
 		return nil, err
+	}
+
+	if len(data) == 0 {
+		return nil, errors.New("Host does not exist")
 	}
 
 	if err = redis.ScanStruct(data, &host); err != nil {

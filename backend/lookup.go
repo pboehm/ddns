@@ -19,15 +19,19 @@ type Request struct {
 }
 
 type Response struct {
-	QType   string
-	QName   string
-	Content string
-	TTL     int
+	QType   string `json:"qtype"`
+	QName   string `json:"qname"`
+	Content string `json:"content"`
+	TTL     int    `json:"ttl"`
 }
 
 type HostLookup struct {
 	config *config.Config
 	hosts  hosts.HostBackend
+}
+
+func NewHostLookup(config *config.Config, hostsBackend hosts.HostBackend) *HostLookup {
+	return &HostLookup{config, hostsBackend}
 }
 
 func (l *HostLookup) Lookup(request *Request) (*Response, error) {
