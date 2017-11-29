@@ -140,7 +140,7 @@ func (w *WebService) Run() {
 		} else {
 			log.Printf("Error during lookup: %v", err)
 			c.JSON(200, gin.H{
-				"result": []string{},
+				"result": false,
 			})
 		}
 	})
