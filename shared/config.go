@@ -5,6 +5,7 @@ type Config struct {
 	Domain             string
 	SOAFqdn            string
 	HostExpirationDays int
-	Listen             string
+	FrontendListen     string
+	BackendListen      string
 	RedisHost          string
 }

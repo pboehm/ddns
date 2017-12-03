@@ -2,7 +2,6 @@ package frontend
 
 import (
 	"fmt"
-	"github.com/pboehm/ddns/backend"
 	"github.com/pboehm/ddns/shared"
 	"gopkg.in/gin-gonic/gin.v1"
 	"html/template"
@@ -10,36 +9,33 @@ import (
 	"net"
 	"net/http"
 	"regexp"
-	"strings"
 )
 
-type WebService struct {
+type Frontend struct {
 	config *shared.Config
 	hosts  shared.HostBackend
-	lookup *backend.HostLookup
 }
 
-func NewWebService(config *shared.Config, hosts shared.HostBackend, lookup *backend.HostLookup) *WebService {
-	return &WebService{
+func NewFrontend(config *shared.Config, hosts shared.HostBackend) *Frontend {
+	return &Frontend{
 		config: config,
 		hosts:  hosts,
-		lookup: lookup,
 	}
 }
 
-func (w *WebService) Run() {
+func (f *Frontend) Run() error {
 	r := gin.Default()
 	r.SetHTMLTemplate(buildTemplate())
 
 	r.GET("/", func(g *gin.Context) {
-		g.HTML(200, "index.html", gin.H{"domain": w.config.Domain})
+		g.HTML(200, "index.html", gin.H{"domain": f.config.Domain})
 	})
 
 	r.GET("/available/:hostname", func(c *gin.Context) {
 		hostname, valid := isValidHostname(c.Params.ByName("hostname"))
 
 		if valid {
-			_, err := w.hosts.GetHost(hostname)
+			_, err := f.hosts.GetHost(hostname)
 			valid = err != nil
 		}
 
@@ -58,7 +54,7 @@ func (w *WebService) Run() {
 
 		var err error
 
-		if h, err := w.hosts.GetHost(hostname); err == nil {
+		if h, err := f.hosts.GetHost(hostname); err == nil {
 			c.JSON(403, gin.H{
 				"error": fmt.Sprintf("This hostname has already been registered. %v", h),
 			})
@@ -68,7 +64,7 @@ func (w *WebService) Run() {
 		host := &shared.Host{Hostname: hostname, Ip: "127.0.0.1"}
 		host.GenerateAndSetToken()
 
-		if err = w.hosts.SetHost(host); err != nil {
+		if err = f.hosts.SetHost(host); err != nil {
 			c.JSON(400, gin.H{"error": "Could not register host."})
 			return
 		}
@@ -89,7 +85,7 @@ func (w *WebService) Run() {
 			return
 		}
 
-		host, err := w.hosts.GetHost(hostname)
+		host, err := f.hosts.GetHost(hostname)
 		if err != nil {
 			c.JSON(404, gin.H{
 				"error": "This hostname has not been registered or is expired.",
@@ -113,7 +109,7 @@ func (w *WebService) Run() {
 		}
 
 		host.Ip = ip
-		if err = w.hosts.SetHost(host); err != nil {
+		if err = f.hosts.SetHost(host); err != nil {
 			c.JSON(400, gin.H{
 				"error": "Could not update registered IP address",
 			})
@@ -125,26 +121,7 @@ func (w *WebService) Run() {
 		})
 	})
 
-	r.GET("/dnsapi/lookup/:qname/:qtype", func(c *gin.Context) {
-		request := &backend.Request{
-			QName: strings.TrimRight(c.Param("qname"), "."),
-			QType: c.Param("qtype"),
-		}
-
-		response, err := w.lookup.Lookup(request)
-		if err == nil {
-			c.JSON(200, gin.H{
-				"result": []*backend.Response{response},
-			})
-		} else {
-			log.Printf("Error during lookup: %v", err)
-			c.JSON(200, gin.H{
-				"result": false,
-			})
-		}
-	})
-
-	r.Run(w.config.Listen)
+	return r.Run(f.config.FrontendListen)
 }
 
 // Get the Remote Address of the client. At First we try to get the

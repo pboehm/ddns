@@ -5,6 +5,7 @@ import (
 	"github.com/pboehm/ddns/backend"
 	"github.com/pboehm/ddns/frontend"
 	"github.com/pboehm/ddns/shared"
+	"golang.org/x/sync/errgroup"
 	"log"
 	"strings"
 )
@@ -15,14 +16,17 @@ func init() {
 	flag.StringVar(&serviceConfig.Domain, "domain", "",
 		"The subdomain which should be handled by DDNS")
 
-	flag.StringVar(&serviceConfig.Listen, "listen", ":8080",
-		"Which socket should the web service use to bind itself")
+	flag.StringVar(&serviceConfig.SOAFqdn, "soa_fqdn", "",
+		"The FQDN of the DNS server which is returned as a SOA record")
+
+	flag.StringVar(&serviceConfig.BackendListen, "listen-backend", ":8057",
+		"Which socket should the backend web service use to bind itself")
+
+	flag.StringVar(&serviceConfig.FrontendListen, "listen-frontend", ":8080",
+		"Which socket should the frontend web service use to bind itself")
 
 	flag.StringVar(&serviceConfig.RedisHost, "redis", ":6379",
 		"The Redis socket that should be used")
-
-	flag.StringVar(&serviceConfig.SOAFqdn, "soa_fqdn", "",
-		"The FQDN of the DNS server which is returned as a SOA record")
 
 	flag.IntVar(&serviceConfig.HostExpirationDays, "expiration-days", 10,
 		"The number of days after a host is released when it is not updated")
@@ -51,7 +55,18 @@ func main() {
 	redis := shared.NewRedisBackend(serviceConfig)
 	defer redis.Close()
 
-	lookup := backend.NewHostLookup(serviceConfig, redis)
+	var group errgroup.Group
 
-	frontend.NewWebService(serviceConfig, redis, lookup).Run()
+	group.Go(func() error {
+		lookup := backend.NewHostLookup(serviceConfig, redis)
+		return backend.NewBackend(serviceConfig, lookup).Run()
+	})
+
+	group.Go(func() error {
+		return frontend.NewFrontend(serviceConfig, redis).Run()
+	})
+
+	if err := group.Wait(); err != nil {
+		log.Fatal(err)
+	}
 }
