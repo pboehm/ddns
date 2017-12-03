@@ -1,4 +1,4 @@
-package config
+package shared
 
 type Config struct {
 	Verbose            bool

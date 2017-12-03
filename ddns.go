@@ -3,14 +3,13 @@ package main
 import (
 	"flag"
 	"github.com/pboehm/ddns/backend"
-	"github.com/pboehm/ddns/config"
-	"github.com/pboehm/ddns/hosts"
-	"github.com/pboehm/ddns/web"
+	"github.com/pboehm/ddns/frontend"
+	"github.com/pboehm/ddns/shared"
 	"log"
 	"strings"
 )
 
-var serviceConfig *config.Config = &config.Config{}
+var serviceConfig *shared.Config = &shared.Config{}
 
 func init() {
 	flag.StringVar(&serviceConfig.Domain, "domain", "",
@@ -49,10 +48,10 @@ func main() {
 	flag.Parse()
 	validateCommandArgs()
 
-	redis := hosts.NewRedisBackend(serviceConfig)
+	redis := shared.NewRedisBackend(serviceConfig)
 	defer redis.Close()
 
 	lookup := backend.NewHostLookup(serviceConfig, redis)
 
-	web.NewWebService(serviceConfig, redis, lookup).Run()
+	frontend.NewWebService(serviceConfig, redis, lookup).Run()
 }

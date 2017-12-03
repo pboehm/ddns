@@ -2,17 +2,16 @@ package backend
 
 import (
 	"errors"
-	c "github.com/pboehm/ddns/config"
-	h "github.com/pboehm/ddns/hosts"
+	"github.com/pboehm/ddns/shared"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 type testHostBackend struct {
-	hosts map[string]*h.Host
+	hosts map[string]*shared.Host
 }
 
-func (b *testHostBackend) GetHost(hostname string) (*h.Host, error) {
+func (b *testHostBackend) GetHost(hostname string) (*shared.Host, error) {
 	host, ok := b.hosts[hostname]
 	if ok {
 		return host, nil
@@ -21,20 +20,20 @@ func (b *testHostBackend) GetHost(hostname string) (*h.Host, error) {
 	}
 }
 
-func (b *testHostBackend) SetHost(host *h.Host) error {
+func (b *testHostBackend) SetHost(host *shared.Host) error {
 	b.hosts[host.Hostname] = host
 	return nil
 }
 
-func buildLookup(domain string) (*c.Config, *testHostBackend, *HostLookup) {
-	config := &c.Config{
+func buildLookup(domain string) (*shared.Config, *testHostBackend, *HostLookup) {
+	config := &shared.Config{
 		Verbose: false,
 		Domain:  domain,
 		SOAFqdn: "dns" + domain,
 	}
 
 	hosts := &testHostBackend{
-		hosts: map[string]*h.Host{
+		hosts: map[string]*shared.Host{
 			"www": {
 				Hostname: "www",
 				Ip:       "10.11.12.13",

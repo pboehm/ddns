@@ -1,4 +1,4 @@
-package hosts
+package shared
 
 import (
 	"crypto/sha1"

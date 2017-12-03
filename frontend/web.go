@@ -1,10 +1,9 @@
-package web
+package frontend
 
 import (
 	"fmt"
 	"github.com/pboehm/ddns/backend"
-	"github.com/pboehm/ddns/config"
-	"github.com/pboehm/ddns/hosts"
+	"github.com/pboehm/ddns/shared"
 	"gopkg.in/gin-gonic/gin.v1"
 	"html/template"
 	"log"
@@ -15,12 +14,12 @@ import (
 )
 
 type WebService struct {
-	config *config.Config
-	hosts  hosts.HostBackend
+	config *shared.Config
+	hosts  shared.HostBackend
 	lookup *backend.HostLookup
 }
 
-func NewWebService(config *config.Config, hosts hosts.HostBackend, lookup *backend.HostLookup) *WebService {
+func NewWebService(config *shared.Config, hosts shared.HostBackend, lookup *backend.HostLookup) *WebService {
 	return &WebService{
 		config: config,
 		hosts:  hosts,
@@ -66,7 +65,7 @@ func (w *WebService) Run() {
 			return
 		}
 
-		host := &hosts.Host{Hostname: hostname, Ip: "127.0.0.1"}
+		host := &shared.Host{Hostname: hostname, Ip: "127.0.0.1"}
 		host.GenerateAndSetToken()
 
 		if err = w.hosts.SetHost(host); err != nil {

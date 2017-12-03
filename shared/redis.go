@@ -1,9 +1,8 @@
-package hosts
+package shared
 
 import (
 	"errors"
 	"github.com/garyburd/redigo/redis"
-	"github.com/pboehm/ddns/config"
 	"time"
 )
 
@@ -12,7 +11,7 @@ type RedisBackend struct {
 	pool              *redis.Pool
 }
 
-func NewRedisBackend(config *config.Config) *RedisBackend {
+func NewRedisBackend(config *Config) *RedisBackend {
 	return &RedisBackend{
 		expirationSeconds: config.HostExpirationDays * 24 * 60 * 60,
 		pool: &redis.Pool{

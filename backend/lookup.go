@@ -3,8 +3,7 @@ package backend
 import (
 	"errors"
 	"fmt"
-	"github.com/pboehm/ddns/config"
-	"github.com/pboehm/ddns/hosts"
+	"github.com/pboehm/ddns/shared"
 	"strings"
 	"time"
 )
@@ -26,11 +25,11 @@ type Response struct {
 }
 
 type HostLookup struct {
-	config *config.Config
-	hosts  hosts.HostBackend
+	config *shared.Config
+	hosts  shared.HostBackend
 }
 
-func NewHostLookup(config *config.Config, hostsBackend hosts.HostBackend) *HostLookup {
+func NewHostLookup(config *shared.Config, hostsBackend shared.HostBackend) *HostLookup {
 	return &HostLookup{config, hostsBackend}
 }
 
@@ -52,7 +51,7 @@ func (l *HostLookup) Lookup(request *Request) (*Response, error) {
 			return nil, err
 		}
 
-		var host *hosts.Host
+		var host *shared.Host
 		if host, err = l.hosts.GetHost(hostname); err != nil {
 			return nil, err
 		}
