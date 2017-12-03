@@ -121,7 +121,7 @@ func (f *Frontend) Run() error {
 		})
 	})
 
-	return r.Run(f.config.FrontendListen)
+	return r.Run(f.config.ListenFrontend)
 }
 
 // Get the Remote Address of the client. At First we try to get the
