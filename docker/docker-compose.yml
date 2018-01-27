@@ -20,7 +20,7 @@ services:
     depends_on:
       - ddns
     environment:
-      PDNS_REMOTE_HTTP_HOST: "ddns:8057"
+      PDNS_REMOTE_HTTP_HOST: "ddns:8053"
 
   redis:
     restart: unless-stopped

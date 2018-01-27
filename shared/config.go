@@ -23,7 +23,7 @@ func (c *Config) Initialize() {
 	flag.StringVar(&c.SOAFqdn, "soa_fqdn", "",
 		"The FQDN of the DNS server which is returned as a SOA record")
 
-	flag.StringVar(&c.ListenBackend, "listen-backend", ":8057",
+	flag.StringVar(&c.ListenBackend, "listen-backend", ":8053",
 		"Which socket should the backend web service use to bind itself")
 
 	flag.StringVar(&c.ListenFrontend, "listen-frontend", ":8080",
