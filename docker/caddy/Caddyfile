@@ -1,0 +1,6 @@
+{$DDNS_CADDY_DOMAIN} {
+  tls {$DDNS_CADDY_TLS_EMAIL}
+  proxy / {$DDNS_FRONTEND_HOST} {
+    transparent
+  }
+}

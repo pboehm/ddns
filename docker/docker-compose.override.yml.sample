@@ -1,0 +1,31 @@
+version: '2'
+
+services:
+  ddns:
+    environment:
+      DDNS_DOMAIN: d.example.net                      # <<< CHANGE THIS
+      DDNS_SOA_DOMAIN: ns.example.net                 # <<< CHANGE THIS
+
+  powerdns:
+    ports:
+      - "53/udp:53/udp"
+
+  redis:
+    volumes:
+      - "${HOME}/ddns-redis:/data"
+
+  caddy:
+    restart: unless-stopped
+    image: abiosoft/caddy:latest
+    depends_on:
+      - ddns
+    environment:
+      DDNS_FRONTEND_HOST: ddns:8080
+      DDNS_CADDY_DOMAIN: ddns.example.net             # <<< CHANGE THIS
+      DDNS_CADDY_TLS_EMAIL: changeme@example.net      # <<< CHANGE THIS
+    volumes:
+      - "${PWD}/caddy/Caddyfile:/etc/Caddyfile"
+      - "${HOME}/ddns-caddy:/root/.caddy"
+    ports:
+      - "80:80"
+      - "443:443"

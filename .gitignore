@@ -1,4 +1,4 @@
 *.swp
-/docker/docker-compose.override.yml
+/docker/docker-compose.*.yml
 /ddns
 dump.rdb
