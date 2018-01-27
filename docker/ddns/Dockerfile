@@ -8,4 +8,4 @@ RUN go-wrapper install    # "go install -v ."
 
 ENV GIN_MODE release
 
-CMD /go/bin/ddns --domain=${DDNS_DOMAIN} --soa_fqdn=${DDNS_SOA_DOMAIN} --redis=redis:6379 web
+CMD /go/bin/ddns --domain=${DDNS_DOMAIN} --soa_fqdn=${DDNS_SOA_DOMAIN} --redis=${DDNS_REDIS_HOST}
