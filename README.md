@@ -7,7 +7,7 @@ host under the `d.pboehm.de` domain (e.g `test.d.pboehm.de`).
 
 **Recent Changes**
 
-`ddns` has been massively restructured and refactored and now uses the PowerDNS
+`ddns` has been fully restructured and now uses the PowerDNS
 [Remote Backend](https://doc.powerdns.com/md/authoritative/backend-remote/) instead
 of the [Pipe Backend](https://doc.powerdns.com/md/authoritative/backend-pipe/), which
 is far easier to deploy. It now serves both the frontend and the backend other HTTP using different ports.
@@ -50,14 +50,15 @@ you have to create the following two DNS records:
 Setting up `ddns` was kind of a hassle in the legacy version, because there are multiple components that have to
 work together:
 
-* `ddns` that runs the frontend and provides and provides an API compatible with the
+* `ddns` that runs the frontend and provides an API compatible with the
   [Remote Backend](https://doc.powerdns.com/md/authoritative/backend-remote/)
 * Redis as storage backend for `ddns`
 * PowerDNS as DNS server, which uses the `ddns` backend API on Port `8053`
 * A web server that makes the `ddns` frontend accessible to the Internet through HTTPS
 
 The setup is now automated using [docker-compose](https://docs.docker.com/compose/) and only some customization has
-to be made in a `docker-compose.override.yml` file.
+to be made in a `docker-compose.override.yml` file
+(a [sample](./docker/docker-compose.override.yml.sample) is available here).
 
 #### Configuring the Setup
 
