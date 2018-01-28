@@ -1,5 +1,4 @@
 FROM buildpack-deps:jessie-scm
-MAINTAINER Philipp Böhm <philipp@pboehm.org>
 
 # the setup procedure according to https://repo.powerdns.com/ (Debian 8 Jessie)
 RUN echo "deb http://repo.powerdns.com/debian jessie-auth-41 main" > /etc/apt/sources.list.d/pdns.list \
