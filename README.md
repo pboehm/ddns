@@ -10,7 +10,7 @@ host under the `d.pboehm.de` domain (e.g `test.d.pboehm.de`).
 `ddns` has been fully restructured and now uses the PowerDNS
 [Remote Backend](https://doc.powerdns.com/md/authoritative/backend-remote/) instead
 of the [Pipe Backend](https://doc.powerdns.com/md/authoritative/backend-pipe/), which
-is far easier to deploy. It now serves both the frontend and the backend other HTTP using different ports.
+is far easier to deploy. It now serves both the frontend and the backend over HTTP using different ports.
 
 The old `ddns` source code can be found at the [legacy](https://github.com/pboehm/ddns/tree/legacy) tag.
 
