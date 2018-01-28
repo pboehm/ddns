@@ -20,7 +20,12 @@ func NewBackend(config *shared.Config, lookup *HostLookup) *Backend {
 }
 
 func (b *Backend) Run() error {
-	r := gin.Default()
+	r := gin.New()
+	r.Use(gin.Recovery())
+
+	if b.config.Verbose {
+		r.Use(gin.Logger())
+	}
 
 	r.GET("/dnsapi/lookup/:qname/:qtype", func(c *gin.Context) {
 		request := &Request{
@@ -34,7 +39,10 @@ func (b *Backend) Run() error {
 				"result": []*Response{response},
 			})
 		} else {
-			log.Printf("Error during lookup: %v", err)
+			if b.config.Verbose {
+				log.Printf("Error during lookup: %v", err)
+			}
+
 			c.JSON(200, gin.H{
 				"result": false,
 			})

@@ -24,7 +24,13 @@ func NewFrontend(config *shared.Config, hosts shared.HostBackend) *Frontend {
 }
 
 func (f *Frontend) Run() error {
-	r := gin.Default()
+	r := gin.New()
+	r.Use(gin.Recovery())
+
+	if f.config.Verbose {
+		r.Use(gin.Logger())
+	}
+
 	r.SetHTMLTemplate(buildTemplate())
 
 	r.GET("/", func(g *gin.Context) {
