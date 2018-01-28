@@ -1,92 +1,37 @@
 package main
 
 import (
-	"flag"
+	"github.com/pboehm/ddns/backend"
+	"github.com/pboehm/ddns/frontend"
+	"github.com/pboehm/ddns/shared"
+	"golang.org/x/sync/errgroup"
 	"log"
-	"strings"
 )
 
-func HandleErr(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-const (
-	CmdBackend string = "backend"
-	CmdWeb     string = "web"
-)
-
-var (
-	DdnsDomain          string
-	DdnsWebListenSocket string
-	DdnsRedisHost       string
-	DdnsSoaFqdn         string
-	Verbose             bool
-)
+var serviceConfig *shared.Config = &shared.Config{}
 
 func init() {
-	flag.StringVar(&DdnsDomain, "domain", "",
-		"The subdomain which should be handled by DDNS")
-
-	flag.StringVar(&DdnsWebListenSocket, "listen", ":8080",
-		"Which socket should the web service use to bind itself")
-
-	flag.StringVar(&DdnsRedisHost, "redis", ":6379",
-		"The Redis socket that should be used")
-
-	flag.StringVar(&DdnsSoaFqdn, "soa_fqdn", "",
-		"The FQDN of the DNS server which is returned as a SOA record")
-
-	flag.BoolVar(&Verbose, "verbose", false,
-		"Be more verbose")
-}
-
-func ValidateCommandArgs(cmd string) {
-	if DdnsDomain == "" {
-		log.Fatal("You have to supply the domain via --domain=DOMAIN")
-	} else if !strings.HasPrefix(DdnsDomain, ".") {
-		// get the domain in the right format
-		DdnsDomain = "." + DdnsDomain
-	}
-
-	if cmd == CmdBackend {
-		if DdnsSoaFqdn == "" {
-			log.Fatal("You have to supply the server FQDN via --soa_fqdn=FQDN")
-		}
-	}
-}
-
-func PrepareForExecution() string {
-	flag.Parse()
-
-	if len(flag.Args()) != 1 {
-		usage()
-	}
-	cmd := flag.Args()[0]
-
-	ValidateCommandArgs(cmd)
-	return cmd
+	serviceConfig.Initialize()
 }
 
 func main() {
-	cmd := PrepareForExecution()
+	serviceConfig.Validate()
 
-	conn := OpenConnection(DdnsRedisHost)
-	defer conn.Close()
+	redis := shared.NewRedisBackend(serviceConfig)
+	defer redis.Close()
 
-	switch cmd {
-	case CmdBackend:
-		log.Printf("Starting PDNS Backend\n")
-		RunBackend(conn)
-	case CmdWeb:
-		log.Printf("Starting Web Service\n")
-		RunWebService(conn)
-	default:
-		usage()
+	var group errgroup.Group
+
+	group.Go(func() error {
+		lookup := backend.NewHostLookup(serviceConfig, redis)
+		return backend.NewBackend(serviceConfig, lookup).Run()
+	})
+
+	group.Go(func() error {
+		return frontend.NewFrontend(serviceConfig, redis).Run()
+	})
+
+	if err := group.Wait(); err != nil {
+		log.Fatal(err)
 	}
-}
-
-func usage() {
-	log.Fatal("Usage: ./ddns [backend|web]")
 }

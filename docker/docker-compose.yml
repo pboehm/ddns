@@ -1,0 +1,28 @@
+version: '2'
+
+services:
+  ddns:
+    restart: unless-stopped
+    build:
+      context: ..
+      dockerfile: docker/ddns/Dockerfile
+    depends_on:
+      - redis
+    environment:
+      DDNS_DOMAIN: d.example.net
+      DDNS_SOA_DOMAIN: ns.example.net
+      DDNS_REDIS_HOST: redis:6379
+
+  powerdns:
+    restart: unless-stopped
+    build:
+      context: powerdns/
+      dockerfile: Dockerfile
+    depends_on:
+      - ddns
+    environment:
+      PDNS_REMOTE_HTTP_HOST: "ddns:8053"
+
+  redis:
+    restart: unless-stopped
+    image: redis:4-alpine

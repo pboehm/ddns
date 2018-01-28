@@ -1,5 +1,4 @@
 *.swp
-pdns.conf
-pdns_backend.py
-ddns
+/docker/docker-compose.*.yml
+/ddns
 dump.rdb

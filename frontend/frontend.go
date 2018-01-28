@@ -1,49 +1,79 @@
-package main
+package frontend
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
+	"github.com/pboehm/ddns/shared"
+	"gopkg.in/gin-gonic/gin.v1"
 	"html/template"
+	"log"
 	"net"
 	"net/http"
 	"regexp"
 )
 
-func RunWebService(conn *RedisConnection) {
-	r := gin.Default()
-	r.SetHTMLTemplate(BuildTemplate())
+type Frontend struct {
+	config *shared.Config
+	hosts  shared.HostBackend
+}
+
+func NewFrontend(config *shared.Config, hosts shared.HostBackend) *Frontend {
+	return &Frontend{
+		config: config,
+		hosts:  hosts,
+	}
+}
+
+func (f *Frontend) Run() error {
+	r := gin.New()
+	r.Use(gin.Recovery())
+
+	if f.config.Verbose {
+		r.Use(gin.Logger())
+	}
+
+	r.SetHTMLTemplate(buildTemplate())
 
 	r.GET("/", func(g *gin.Context) {
-		g.HTML(200, "index.html", gin.H{"domain": DdnsDomain})
+		g.HTML(200, "index.html", gin.H{"domain": f.config.Domain})
 	})
 
 	r.GET("/available/:hostname", func(c *gin.Context) {
-		hostname, valid := ValidHostname(c.Params.ByName("hostname"))
+		hostname, valid := isValidHostname(c.Params.ByName("hostname"))
+
+		if valid {
+			_, err := f.hosts.GetHost(hostname)
+			valid = err != nil
+		}
 
 		c.JSON(200, gin.H{
-			"available": valid && !conn.HostExist(hostname),
+			"available": valid,
 		})
 	})
 
 	r.GET("/new/:hostname", func(c *gin.Context) {
-		hostname, valid := ValidHostname(c.Params.ByName("hostname"))
+		hostname, valid := isValidHostname(c.Params.ByName("hostname"))
 
 		if !valid {
 			c.JSON(404, gin.H{"error": "This hostname is not valid"})
 			return
 		}
 
-		if conn.HostExist(hostname) {
+		var err error
+
+		if h, err := f.hosts.GetHost(hostname); err == nil {
 			c.JSON(403, gin.H{
-				"error": "This hostname has already been registered.",
+				"error": fmt.Sprintf("This hostname has already been registered. %v", h),
 			})
 			return
 		}
 
-		host := &Host{Hostname: hostname, Ip: "127.0.0.1"}
+		host := &shared.Host{Hostname: hostname, Ip: "127.0.0.1"}
 		host.GenerateAndSetToken()
 
-		conn.SaveHost(host)
+		if err = f.hosts.SetHost(host); err != nil {
+			c.JSON(400, gin.H{"error": "Could not register host."})
+			return
+		}
 
 		c.JSON(200, gin.H{
 			"hostname":    host.Hostname,
@@ -53,7 +83,7 @@ func RunWebService(conn *RedisConnection) {
 	})
 
 	r.GET("/update/:hostname/:token", func(c *gin.Context) {
-		hostname, valid := ValidHostname(c.Params.ByName("hostname"))
+		hostname, valid := isValidHostname(c.Params.ByName("hostname"))
 		token := c.Params.ByName("token")
 
 		if !valid {
@@ -61,14 +91,13 @@ func RunWebService(conn *RedisConnection) {
 			return
 		}
 
-		if !conn.HostExist(hostname) {
+		host, err := f.hosts.GetHost(hostname)
+		if err != nil {
 			c.JSON(404, gin.H{
 				"error": "This hostname has not been registered or is expired.",
 			})
 			return
 		}
-
-		host := conn.GetHost(hostname)
 
 		if host.Token != token {
 			c.JSON(403, gin.H{
@@ -77,7 +106,7 @@ func RunWebService(conn *RedisConnection) {
 			return
 		}
 
-		ip, err := GetRemoteAddr(c.Request)
+		ip, err := extractRemoteAddr(c.Request)
 		if err != nil {
 			c.JSON(400, gin.H{
 				"error": "Your sender IP address is not in the right format",
@@ -86,7 +115,11 @@ func RunWebService(conn *RedisConnection) {
 		}
 
 		host.Ip = ip
-		conn.SaveHost(host)
+		if err = f.hosts.SetHost(host); err != nil {
+			c.JSON(400, gin.H{
+				"error": "Could not update registered IP address",
+			})
+		}
 
 		c.JSON(200, gin.H{
 			"current_ip": ip,
@@ -94,13 +127,13 @@ func RunWebService(conn *RedisConnection) {
 		})
 	})
 
-	r.Run(DdnsWebListenSocket)
+	return r.Run(f.config.ListenFrontend)
 }
 
 // Get the Remote Address of the client. At First we try to get the
 // X-Forwarded-For Header which holds the IP if we are behind a proxy,
 // otherwise the RemoteAddr is used
-func GetRemoteAddr(req *http.Request) (string, error) {
+func extractRemoteAddr(req *http.Request) (string, error) {
 	header_data, ok := req.Header["X-Forwarded-For"]
 
 	if ok {
@@ -112,14 +145,16 @@ func GetRemoteAddr(req *http.Request) (string, error) {
 }
 
 // Get index template from bindata
-func BuildTemplate() *template.Template {
+func buildTemplate() *template.Template {
 	html, err := template.New("index.html").Parse(indexTemplate)
-	HandleErr(err)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return html
 }
 
-func ValidHostname(host string) (string, bool) {
+func isValidHostname(host string) (string, bool) {
 	valid, _ := regexp.Match("^[a-z0-9]{1,32}$", []byte(host))
 
 	return host, valid

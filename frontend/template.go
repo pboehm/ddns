@@ -1,4 +1,4 @@
-package main
+package frontend
 
 const indexTemplate string = `
 <!DOCTYPE html>
@@ -168,7 +168,7 @@ const indexTemplate string = `
             function validate() {
                 var hostname = $('#hostname').val();
 
-                $.getJSON("/available/" + hostname + "/", function( data ) {
+                $.getJSON("/available/" + hostname, function( data ) {
                     if (data.available) {
                         isValid();
                     } else {
@@ -188,7 +188,7 @@ const indexTemplate string = `
                 $('#register').click(function() {
                     var hostname = $("#hostname").val();
 
-                    $.getJSON("/new/" + hostname + "/", function( data ) {
+                    $.getJSON("/new/" + hostname, function( data ) {
                         console.log(data);
 
                         var host = location.protocol + '//' + location.host;

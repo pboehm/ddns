@@ -1,109 +1,86 @@
-ddns
-====
+# `ddns` - Dynamic DNS
 
 A self-hosted Dynamic DNS solution similar to DynDNS or NO-IP.
 
-You can use a hosted version at [ddns.pboehm.org](http://ddns.pboehm.org/) where you can register a host under the `d.pboehm.de` domain (e.g `test.d.pboehm.de`).
+You can use a hosted version at [ddns.pboehm.de](https://ddns.pboehm.de/) where you can register a
+host under the `d.pboehm.de` domain (e.g `test.d.pboehm.de`).
+
+**Recent Changes**
+
+`ddns` has been massively restructured and refactored and now uses the PowerDNS
+[Remote Backend](https://doc.powerdns.com/md/authoritative/backend-remote/) instead
+of the [Pipe Backend](https://doc.powerdns.com/md/authoritative/backend-pipe/), which
+is far easier to deploy. It now serves both the frontend and the backend other HTTP using different ports.
+
+The old `ddns` source code can be found at the [legacy](https://github.com/pboehm/ddns/tree/legacy) tag.
 
 ## How can I update my IP if it changes?
 
-`ddns` is built around a small webservice, so that you can update your IP address, simply by calling an URL periodically through `curl` (using `cron`). Hosts that haven't been updated for 10 days will be automatically removed. This can be configured in your own instance.
+`ddns` is built around a small webservice, so that you can update your IP address simply by calling
+an URL periodically through `curl`. Hosts that haven't been updated for 10 days will
+be automatically removed. This can be configured in your own instance.
 
-An API similar to DynDNS/NO-IP hasn't been implemented yet.
+An API similar to DynDNS/NO-IP has not been implemented yet.
 
 ## Self-Hosting
 
 ### Requirements
 
-* A custom domain where the registrar allows NS-Records for subdomains
-* A global accessible Server running an OS which is supported by the tools listed below
-* A running [Redis](http://redis.io) instance for data storage
-* An installation of [PowerDNS](https://www.powerdns.com/) with the Pipe-Backend included
-* [Go](http://golang.org/) 1.3
+* A custom domain where the registrar allows setting `NS` records for subdomains. This is important because not all
+  DNS providers support this.
+* A server with [docker](https://www.docker.com/) and [docker-compose](https://docs.docker.com/compose/) installed
+* The following ports should be opened in the firewall:
+  * `53/udp`
+  * `80/tcp`
+  * `443/tcp`
 
-### Installation
+### DNS-Setup
 
-The following instructions are valid for Ubuntu/Debian. Some files/packages
-could have other names/locations, please search for it.
+For the domain you want to use with `ddns` (`example.net` in the following sections, please adjust this to your domain)
+you have to create the following two DNS records:
 
-You should have a working Go environment (correct `$GOPATH`).
+* `ddns.example.net` as a `CNAME` or `A`/`AAAA` record pointing to the server `ddns` will be running on. This record
+  will be used for accessing the `ddns` frontend in your browser or via `curl`. It is also the target for the
+  corresponding `NS` record.
+* `d.example.net` as an `NS` record pointing to the previously created `ddns.example.net` record. This will delegate
+  all subdomains under `d.example.net` to the PowerDNS server running on `ddns.example.net`.
 
-    $ go version # check that you have go 1.3 installed
-    go version go1.3 linux/amd64
+### `ddns`-Setup
 
-Then install `ddns` via:
+Setting up `ddns` was kind of a hassle in the legacy version, because there are multiple components that have to
+work together:
 
-    $ go get github.com/pboehm/ddns
-    $ ls $GOPATH/bin/ddns # the displayed path will be used later
-    /home/user/gocode/bin/ddns
+* `ddns` that runs the frontend and provides and provides an API compatible with the
+  [Remote Backend](https://doc.powerdns.com/md/authoritative/backend-remote/)
+* Redis as storage backend for `ddns`
+* PowerDNS as DNS server, which uses the `ddns` backend API on Port `8053`
+* A web server that makes the `ddns` frontend accessible to the Internet through HTTPS
 
-#### Backend
+The setup is now automated using [docker-compose](https://docs.docker.com/compose/) and only some customization has
+to be made in a `docker-compose.override.yml` file.
 
-Install `pdns` and `redis-server`:
+#### Configuring the Setup
 
-    $ sudo apt-get install redis-server pdns-server pdns-backend-pipe
+The setup included in this repository contains all the components described above and uses
+[caddy](https://caddyserver.com/) as a web server, because it provides automatic HTTPS using Lets Encrypt.
 
-Both services should start at boot automatically. You should open `udp/53` and
-`tcp/53` on your Firewall so that `pdns` can be be used from outside of your
-host.
+```
+git clone git@github.com:pboehm/ddns.git
+cd ddns/docker
+cp docker-compose.override.yml.sample docker-compose.override.yml
+```
 
-    $ sudo vim /etc/powerdns/pdns.d/pipe.conf
+Please adjust the settings in `docker-compose.override.yml` marked with the `#<<< ....` comments as follows:
 
-`pipe.conf` should have the following content. Please adjust the path of `ddns`
-and the values supplied to `--domain` and `--soa_fqdn`:
+* adjust the domain part in lines marked with `# <<< ADJUST DOMAIN` according to your DNS-Setup
+* insert your email address in lines marked with `# <<< INSERT EMAIL` which is required for getting certificates
+  from Lets Encrypt
+* adjust the path component before the `:` in lines marked with `# <<< ADJUST LOCAL PATH` if the shown path
+  does not meet your requirements
 
-    launch=pipe
-    pipebackend-abi-version=1
-    pipe-command=/home/user/gocode/bin/ddns --soa_fqdn=dns.example.com --domain=sub.example.com backend
+Finally execute the following `docker-compose` command, which creates 4 containers in detached mode which are also
+started automatically after reboot.
 
-Then restart `pdns`:
-
-    $ sudo service pdns restart
-
-#### Frontend
-
-`ddns` includes a webservice which is used for creating new hosts and updating
-ip addresses. I prefer using `nginx` as a reverse proxy and not running `ddns`
-on port 80. As a process manager, I prefer using `supervisord` so it is
-described here.
-
-    $ sudo apt-get install nginx supervisor
-
-Create a supervisor config file for ddns:
-
-    $ sudo vim /etc/supervisor/conf.d/ddns.conf
-    $ cat /etc/supervisor/conf.d/ddns.conf
-    [program:ddns]
-    directory = /tmp/
-    user = user
-    command = /home/user/gocode/bin/ddns --domain=sub.example.com web
-    autostart = True
-    autorestart = True
-    redirect_stderr = True
-
-Restart the `supervisor` daemon and `ddns` listens on Port 8080 (can be
-changed by adding `--listen=:1234`).
-
-    $ sudo service supervisor restart
-
-Now you have to add a nginx virtual host for `ddns`:
-
-    $ sudo vim /etc/nginx/sites-enabled/default
-    $ cat /etc/nginx/sites-enabled/default
-    server {
-        listen   80;
-        server_name  ddns.example.com;
-
-        location / {
-            proxy_pass http://127.0.0.1:8080;
-            proxy_set_header    Host            $host;
-            proxy_set_header    X-Real-IP       $remote_addr;
-            proxy_set_header    X-Forwarded-for $proxy_add_x_forwarded_for;
-            proxy_connect_timeout 300;
-        }
-    }
-
-Please adjust the `server_name` with a valid FQDN. Now we only have to restart
-`nginx`:
-
-    $ sudo service nginx restart
+```
+docker-compose --project-name ddns up -d
+```
