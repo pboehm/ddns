@@ -60,10 +60,8 @@ func (f *Frontend) Run() error {
 
 		var err error
 
-		if h, err := f.hosts.GetHost(hostname); err == nil {
-			c.JSON(403, gin.H{
-				"error": fmt.Sprintf("This hostname has already been registered. %v", h),
-			})
+		if _, err := f.hosts.GetHost(hostname); err == nil {
+			c.JSON(403, gin.H{"error": "This hostname has already been registered."})
 			return
 		}
 
