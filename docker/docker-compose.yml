@@ -10,7 +10,7 @@ services:
       - redis
     environment:
       DDNS_DOMAIN: d.example.net
-      DDNS_SOA_DOMAIN: ns.example.net
+      DDNS_SOA_DOMAIN: ddns.example.net
       DDNS_REDIS_HOST: redis:6379
 
   powerdns:
