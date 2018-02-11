@@ -14,6 +14,11 @@ is far easier to deploy. It now serves both the frontend and the backend over HT
 
 The old `ddns` source code can be found at the [legacy](https://github.com/pboehm/ddns/tree/legacy) tag.
 
+**Security Notice**
+
+Please make sure that you use the latest available version of `ddns`, as it contains an important security
+fix for [an issue introduced in the rework](https://github.com/pboehm/ddns/issues/8).
+
 ## How can I update my IP if it changes?
 
 `ddns` is built around a small webservice, so that you can update your IP address simply by calling
@@ -80,8 +85,9 @@ Please adjust the settings in `docker-compose.override.yml` marked with the `#<<
   does not meet your requirements
 
 Finally execute the following `docker-compose` command, which creates 4 containers in detached mode which are also
-started automatically after reboot.
+started automatically after reboot. For updating an existing installation use the same command because it automatically
+rebuilds the containers.
 
 ```
-docker-compose --project-name ddns up -d
+docker-compose --project-name ddns up -d --build
 ```
