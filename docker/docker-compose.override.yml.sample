@@ -8,7 +8,7 @@ services:
 
   powerdns:
     ports:
-      - "53/udp:53/udp"
+      - "53:53/udp"
 
   redis:
     volumes:
