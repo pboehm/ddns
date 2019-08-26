@@ -1,12 +1,12 @@
-FROM golang:1.9-alpine3.7
+FROM golang:alpine
 
 RUN apk add --no-cache git
 
 WORKDIR /go/src/github.com/pboehm/ddns
 COPY . .
 
-RUN go-wrapper download   # "go get -d -v ./..."
-RUN go-wrapper install    # "go install -v ."
+RUN GO111MODULE=on go get -d -v ./...
+RUN GO111MODULE=on go install -v ./...
 
 ENV GIN_MODE release
 

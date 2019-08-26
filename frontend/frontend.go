@@ -2,8 +2,8 @@ package frontend
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/pboehm/ddns/shared"
-	"gopkg.in/gin-gonic/gin.v1"
 	"html/template"
 	"log"
 	"net"
