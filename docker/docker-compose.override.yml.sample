@@ -12,7 +12,7 @@ services:
 
   redis:
     volumes:
-      - "/root/ddns-redis:/data"                      # <<< ADJUST LOCAL PATH
+      - "${PWD}/.redis_mount:/data"
 
   caddy:
     restart: unless-stopped
@@ -20,12 +20,13 @@ services:
     depends_on:
       - ddns
     environment:
+      ACME_AGREE: "true"
       DDNS_FRONTEND_HOST: ddns:8080
       DDNS_CADDY_DOMAIN: ddns.example.net             # <<< ADJUST DOMAIN
       DDNS_CADDY_TLS_EMAIL: changeme@example.net      # <<< INSERT EMAIL
     volumes:
       - "${PWD}/caddy/Caddyfile:/etc/Caddyfile"
-      - "/root/ddns-caddy:/root/.caddy"               # <<< ADJUST LOCAL PATH
+      - "${PWD}/.caddy_mount:/root/.caddy"
     ports:
       - "80:80"
       - "443:443"

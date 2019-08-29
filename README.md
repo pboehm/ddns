@@ -52,15 +52,6 @@ you have to create the following two DNS records:
 
 ### `ddns`-Setup
 
-Setting up `ddns` was kind of a hassle in the legacy version, because there are multiple components that have to
-work together:
-
-* `ddns` that runs the frontend and provides an API compatible with the
-  [Remote Backend](https://doc.powerdns.com/md/authoritative/backend-remote/)
-* Redis as storage backend for `ddns`
-* PowerDNS as DNS server, which uses the `ddns` backend API on Port `8053`
-* A web server that makes the `ddns` frontend accessible to the Internet through HTTPS
-
 The setup is now automated using [docker-compose](https://docs.docker.com/compose/) and only some customization has
 to be made in a `docker-compose.override.yml` file
 (a [sample](./docker/docker-compose.override.yml.sample) is available here).
@@ -81,8 +72,6 @@ Please adjust the settings in `docker-compose.override.yml` marked with the `#<<
 * adjust the domain part in lines marked with `# <<< ADJUST DOMAIN` according to your DNS-Setup
 * insert your email address in lines marked with `# <<< INSERT EMAIL` which is required for getting certificates
   from Lets Encrypt
-* adjust the path component before the `:` in lines marked with `# <<< ADJUST LOCAL PATH` if the shown path
-  does not meet your requirements
 
 Finally execute the following `docker-compose` command, which creates 4 containers in detached mode which are also
 started automatically after reboot. For updating an existing installation use the same command because it automatically
