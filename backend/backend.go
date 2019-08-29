@@ -1,8 +1,8 @@
 package backend
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/pboehm/ddns/shared"
-	"gopkg.in/gin-gonic/gin.v1"
 	"log"
 	"strings"
 )
