@@ -139,10 +139,6 @@ const indexTemplate string = `
 
             <div id="command_output"></div>
 
-            <div class="footer">
-                <p>&copy; Philipp Böhm</p>
-            </div>
-
         </div> <!-- /container -->
 
         <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
