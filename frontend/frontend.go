@@ -136,7 +136,8 @@ func extractRemoteAddr(req *http.Request) (string, error) {
 	headerData, ok := req.Header["X-Forwarded-For"]
 
 	if ok {
-		//Cloudflare returns it as a string. Haven't tested others
+		//headerData[0] is one long string with
+		//all ips and not just the first one
 		//You end up getting "ip1, ip2" instead of ip1.
 		//So we split it and take the first
 		cleanedString := strings.Split(headerData[0], ", ")[0]
