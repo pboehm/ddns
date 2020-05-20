@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"regexp"
+	"strings"
 )
 
 type Frontend struct {
@@ -132,10 +133,14 @@ func (f *Frontend) Run() error {
 // X-Forwarded-For Header which holds the IP if we are behind a proxy,
 // otherwise the RemoteAddr is used
 func extractRemoteAddr(req *http.Request) (string, error) {
-	header_data, ok := req.Header["X-Forwarded-For"]
+	headerData, ok := req.Header["X-Forwarded-For"]
 
 	if ok {
-		return header_data[0], nil
+		//Cloudflare returns it as a string. Haven't tested others
+		//You end up getting "ip1, ip2" instead of ip1.
+		//So we split it and take the first
+		cleanedString := strings.Split(headerData[0], ", ")[0]
+		return cleanedString, nil
 	} else {
 		ip, _, err := net.SplitHostPort(req.RemoteAddr)
 		return ip, err
