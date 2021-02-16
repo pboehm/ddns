@@ -153,7 +153,7 @@ func buildTemplate() *template.Template {
 }
 
 func isValidHostname(host string) (string, bool) {
-	valid, _ := regexp.Match("^[a-z0-9]{1,32}$", []byte(host))
+	valid, _ := regexp.Match("^([a-zA-Z0-9]([a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?)$", []byte(host))
 
 	return host, valid
 }
