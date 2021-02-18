@@ -6,6 +6,7 @@ services:
       DDNS_DOMAIN: d.example.net                      # <<< ADJUST DOMAIN
       DDNS_SOA_DOMAIN: ddns.example.net               # <<< ADJUST DOMAIN
       DDNS_EXPIRATION_DAYS: 10
+      DEBUG_MODE: "false"
 
   powerdns:
     ports:
