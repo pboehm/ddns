@@ -17,6 +17,10 @@ func init() {
 func main() {
 	serviceConfig.Validate()
 
+	if serviceConfig.Verbose {
+		log.Printf("Loaded config: %#v", serviceConfig)
+	}
+
 	redis := shared.NewRedisBackend(serviceConfig)
 	defer redis.Close()
 

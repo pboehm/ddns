@@ -1,8 +1,9 @@
 package shared
 
 import (
-	"flag"
+	"github.com/jnovack/flag"
 	"log"
+	"os"
 	"strings"
 )
 
@@ -14,42 +15,47 @@ type Config struct {
 	ListenFrontend     string
 	ListenBackend      string
 	RedisHost          string
+
+	fs *flag.FlagSet
 }
 
 func (c *Config) Initialize() {
-	flag.StringVar(&c.Domain, "domain", "",
+	fs := flag.NewFlagSetWithEnvPrefix(os.Args[0], "DDNS", 0)
+	fs.StringVar(&c.Domain, "domain", "",
 		"The subdomain which should be handled by DDNS")
 
-	flag.StringVar(&c.SOAFqdn, "soa_fqdn", "",
+	fs.StringVar(&c.SOAFqdn, "soa_fqdn", "",
 		"The FQDN of the DNS server which is returned as a SOA record")
 
-	flag.StringVar(&c.ListenBackend, "listen-backend", ":8053",
+	fs.StringVar(&c.ListenBackend, "listen-backend", ":8053",
 		"Which socket should the backend web service use to bind itself")
 
-	flag.StringVar(&c.ListenFrontend, "listen-frontend", ":8080",
+	fs.StringVar(&c.ListenFrontend, "listen-frontend", ":8080",
 		"Which socket should the frontend web service use to bind itself")
 
-	flag.StringVar(&c.RedisHost, "redis", ":6379",
+	fs.StringVar(&c.RedisHost, "redis-host", ":6379",
 		"The Redis socket that should be used")
 
-	flag.IntVar(&c.HostExpirationDays, "expiration-days", 10,
+	fs.IntVar(&c.HostExpirationDays, "expiration-days", 10,
 		"The number of days after a host is released when it is not updated")
 
-	flag.BoolVar(&c.Verbose, "verbose", false,
+	fs.BoolVar(&c.Verbose, "verbose", false,
 		"Be more verbose")
+
+	c.fs = fs
 }
 
 func (c *Config) Validate() {
-	flag.Parse()
+	c.fs.Parse(os.Args[1:])
 
 	if c.Domain == "" {
-		log.Fatal("You have to supply the domain via --domain=DOMAIN")
+		log.Fatal("You have to supply the domain via env variable DDNS_DOMAIN or command line flag --domain=DOMAIN")
 	} else if !strings.HasPrefix(c.Domain, ".") {
 		// get the domain in the right format
 		c.Domain = "." + c.Domain
 	}
 
 	if c.SOAFqdn == "" {
-		log.Fatal("You have to supply the server FQDN via --soa_fqdn=FQDN")
+		log.Fatal("You have to supply the server FQDN via env variable DDNS_SOA_FQDN or command line flag --soa_fqdn=FQDN")
 	}
 }
