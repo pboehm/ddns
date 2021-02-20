@@ -10,8 +10,17 @@ jobs:
       - checkout
       - run: go get -v -t -d ./...
       - run: go test -v ./...
+  
+  docker-build:
+    executor: docker/docker
+    steps:
+      - setup_remote_docker
+      - checkout
+      - docker/build:
+          image: pboehm/ddns
+          dockerfile: docker/ddns/Dockerfile
 
-  build-and-push:
+  docker-build-and-push:
     executor: docker/docker
     steps:
       - setup_remote_docker
@@ -21,14 +30,27 @@ jobs:
           image: pboehm/ddns
           dockerfile: docker/ddns/Dockerfile
       - docker/push:
-          digest-path: /tmp/digest.txt
           image: pboehm/ddns
-      - run:
-          command: |
-            echo "Digest is: $(</tmp/digest.txt)"
+          tag: $CIRCLE_SHA1,latest
 
 workflows:
   commit:
     jobs:
-      - test
-      - build-and-push
+      - test:
+          filters:  # required since `docker-XXXX` have tag filters AND require `test`
+            tags:
+              only: /.*/
+
+      - docker-build:
+          requires:
+            - test
+          filters:
+            branches:
+              ignore: master
+
+      - docker-build-and-push:
+          requires:
+            - test
+          filters:
+            branches:
+              only: master
