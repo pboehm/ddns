@@ -1,5 +1,11 @@
 # `ddns` - Dynamic DNS
 
+[![CircleCI](https://img.shields.io/circleci/build/github/pboehm/ddns?style=flat)](https://circleci.com/github/pboehm/ddns)
+![Docker Image Size (tag)](https://img.shields.io/docker/image-size/pboehm/ddns/latest?logo=Docker)
+![Docker Pulls](https://img.shields.io/docker/pulls/pboehm/ddns?logo=Docker)
+![GitHub](https://img.shields.io/github/license/pboehm/ddns?style=flat)
+
+
 A self-hosted Dynamic DNS solution similar to DynDNS or NO-IP.
 
 You can use a hosted version at [ddns.pboehm.de](https://ddns.pboehm.de/) where you can register a
@@ -13,11 +19,6 @@ of the [Pipe Backend](https://doc.powerdns.com/md/authoritative/backend-pipe/), 
 is far easier to deploy. It now serves both the frontend and the backend over HTTP using different ports.
 
 The old `ddns` source code can be found at the [legacy](https://github.com/pboehm/ddns/tree/legacy) tag.
-
-**Security Notice**
-
-Please make sure that you use the latest available version of `ddns`, as it contains an important security
-fix for [an issue introduced in the rework](https://github.com/pboehm/ddns/issues/8).
 
 ## How can I update my IP if it changes?
 
