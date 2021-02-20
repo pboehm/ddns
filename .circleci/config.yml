@@ -1,0 +1,56 @@
+version: 2.1
+orbs:
+  docker: circleci/docker@1.5.0
+jobs:
+  test:
+    docker:
+      - image: circleci/golang:1.16
+    working_directory: /go/src/github.com/pboehm/ddns
+    steps:
+      - checkout
+      - run: go get -v -t -d ./...
+      - run: go test -v ./...
+  
+  docker-build:
+    executor: docker/docker
+    steps:
+      - setup_remote_docker
+      - checkout
+      - docker/build:
+          image: pboehm/ddns
+          dockerfile: docker/ddns/Dockerfile
+
+  docker-build-and-push:
+    executor: docker/docker
+    steps:
+      - setup_remote_docker
+      - checkout
+      - docker/check
+      - docker/build:
+          image: pboehm/ddns
+          dockerfile: docker/ddns/Dockerfile
+      - docker/push:
+          image: pboehm/ddns
+          tag: $CIRCLE_SHA1,latest
+
+workflows:
+  commit:
+    jobs:
+      - test:
+          filters:  # required since `docker-XXXX` have tag filters AND require `test`
+            tags:
+              only: /.*/
+
+      - docker-build:
+          requires:
+            - test
+          filters:
+            branches:
+              ignore: master
+
+      - docker-build-and-push:
+          requires:
+            - test
+          filters:
+            branches:
+              only: master
