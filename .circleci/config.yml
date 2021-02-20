@@ -10,7 +10,7 @@ jobs:
       - checkout
       - run: go get -v -t -d ./...
       - run: go test -v ./...
-  
+
   docker-build:
     executor: docker/docker
     steps:
@@ -29,6 +29,7 @@ jobs:
       - docker/build:
           image: pboehm/ddns
           dockerfile: docker/ddns/Dockerfile
+          tag: $CIRCLE_SHA1,latest
       - docker/push:
           image: pboehm/ddns
           tag: $CIRCLE_SHA1,latest
