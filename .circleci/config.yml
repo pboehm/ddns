@@ -19,6 +19,7 @@ jobs:
       - docker/check
       - docker/build:
           image: pboehm/ddns
+          dockerfile: docker/ddns/Dockerfile
       - docker/push:
           digest-path: /tmp/digest.txt
           image: pboehm/ddns
