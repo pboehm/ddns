@@ -1,9 +1,9 @@
 # `ddns` - Dynamic DNS
 
 [![CircleCI](https://img.shields.io/circleci/build/github/pboehm/ddns?style=flat)](https://circleci.com/github/pboehm/ddns)
-![Docker Image Size (tag)](https://img.shields.io/docker/image-size/pboehm/ddns/latest?logo=Docker)
-![Docker Pulls](https://img.shields.io/docker/pulls/pboehm/ddns?logo=Docker)
-![GitHub](https://img.shields.io/github/license/pboehm/ddns?style=flat)
+[![Docker Image Size (tag)](https://img.shields.io/docker/image-size/pboehm/ddns/latest?logo=Docker)](https://hub.docker.com/r/pboehm/ddns)
+[![Docker Pulls](https://img.shields.io/docker/pulls/pboehm/ddns?logo=Docker)](https://hub.docker.com/r/pboehm/ddns)
+[![GitHub](https://img.shields.io/github/license/pboehm/ddns?style=flat)](https://github.com/pboehm/ddns)
 
 
 A self-hosted Dynamic DNS solution similar to DynDNS or NO-IP.
