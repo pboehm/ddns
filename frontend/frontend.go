@@ -41,7 +41,7 @@ func (f *Frontend) Run() error {
 		r.Use(gin.Logger())
 	}
 
-	r.SetHTMLTemplate(buildTemplate())
+	r.SetHTMLTemplate(buildTemplate(f.config.CustomTemplatePath))
 
 	r.GET("/", func(g *gin.Context) {
 		g.HTML(200, "index.html", gin.H{"domain": f.config.Domain})
@@ -153,10 +153,18 @@ func extractRemoteAddr(req *http.Request) (string, error) {
 }
 
 // Get index template from bindata
-func buildTemplate() *template.Template {
-	html, err := template.New("index.html").Parse(indexTemplate)
+func buildTemplate(customTemplatePath string) *template.Template {
+	var html *template.Template
+	var err error
+
+	if customTemplatePath != "" {
+		html, err = template.ParseFiles(customTemplatePath)
+	} else {
+		html, err = template.New("index.html").Parse(indexTemplate)
+	}
+
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error parsing frontend template: %v", err)
 	}
 
 	return html

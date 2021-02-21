@@ -15,6 +15,7 @@ type Config struct {
 	ListenFrontend     string
 	ListenBackend      string
 	RedisHost          string
+	CustomTemplatePath string
 
 	fs *flag.FlagSet
 }
@@ -33,6 +34,9 @@ func (c *Config) Initialize() {
 	fs.StringVar(&c.ListenFrontend, "listen-frontend", ":8080",
 		"Which socket should the frontend web service use to bind itself")
 
+	fs.StringVar(&c.CustomTemplatePath, "custom-template-path", "",
+		"A path to a custom `index.html` file that will be used instead of the default frontend template")
+
 	fs.StringVar(&c.RedisHost, "redis-host", ":6379",
 		"The Redis socket that should be used")
 
@@ -46,7 +50,9 @@ func (c *Config) Initialize() {
 }
 
 func (c *Config) Validate() {
-	c.fs.Parse(os.Args[1:])
+	if err := c.fs.Parse(os.Args[1:]); err != nil {
+		log.Fatalf("Error parsing configuration: %v", err)
+	}
 
 	if c.Domain == "" {
 		log.Fatal("You have to supply the domain via env variable DDNS_DOMAIN or command line flag --domain=DOMAIN")
