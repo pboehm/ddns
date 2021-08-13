@@ -81,3 +81,17 @@ rebuilds the containers.
 ```
 docker-compose --project-name ddns up -d --build
 ```
+
+#### Securing the Setup
+
+Add basicauth to `caddy/Caddyfile`, e.g: 
+```
+{$DDNS_CADDY_DOMAIN} {
+  tls {$DDNS_CADDY_TLS_EMAIL}
+  basicauth / admin password
+  proxy / {$DDNS_FRONTEND_HOST} {
+    transparent
+  }
+}
+```
+Remember that you would also need to add `-u admin:password` to your curl command
