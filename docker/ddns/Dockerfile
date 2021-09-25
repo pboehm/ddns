@@ -14,5 +14,5 @@ ENV DDNS_EXPIRATION_DAYS 10
 CMD /go/bin/ddns \
     --domain=${DDNS_DOMAIN} \
     --soa_fqdn=${DDNS_SOA_DOMAIN} \
-    --redis=${DDNS_REDIS_HOST} \
+    --redis-host=${DDNS_REDIS_HOST} \
     --expiration-days=${DDNS_EXPIRATION_DAYS}
