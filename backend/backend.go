@@ -55,5 +55,11 @@ func (b *Backend) Run() error {
 		})
 	})
 
+	r.GET("/dnsapi/getAllDomainMetadata/:name", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"result": false,
+		})
+	})
+
 	return r.Run(b.config.ListenBackend)
 }
