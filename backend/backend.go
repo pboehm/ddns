@@ -51,7 +51,13 @@ func (b *Backend) Run() error {
 
 	r.GET("/dnsapi/getDomainMetadata/:name/:kind", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"result": false,
+			"result": []string{"0"},
+		})
+	})
+
+	r.GET("/dnsapi/getAllDomainMetadata/:name", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"result": gin.H{"PRESIGNED": []string{"0"}},
 		})
 	})
 
