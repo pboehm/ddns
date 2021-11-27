@@ -6,19 +6,23 @@
 [![GitHub](https://img.shields.io/github/license/pboehm/ddns?style=flat)](https://github.com/pboehm/ddns)
 
 
-A self-hosted Dynamic DNS solution similar to DynDNS or NO-IP.
+A self-hosted Dynamic DNS solution similar to DynDNS or NO-IP based on the
+[PowerDNS Remote Backend](https://doc.powerdns.com/md/authoritative/backend-remote/).
 
-You can use a hosted version at [ddns.pboehm.de](https://ddns.pboehm.de/) where you can register a
-host under the `d.pboehm.de` domain (e.g `test.d.pboehm.de`).
+<img src="screenshot.png" alt="screenshot" width="500"/>
 
-**Recent Changes**
 
-`ddns` has been fully restructured and now uses the PowerDNS
-[Remote Backend](https://doc.powerdns.com/md/authoritative/backend-remote/) instead
-of the [Pipe Backend](https://doc.powerdns.com/md/authoritative/backend-pipe/), which
-is far easier to deploy. It now serves both the frontend and the backend over HTTP using different ports.
+## ⚠️⚠️⚠️ Note regarding hosted version at `ddns.pboehm.de`
 
-The old `ddns` source code can be found at the [legacy](https://github.com/pboehm/ddns/tree/legacy) tag.
+The hosted `ddns` service with custom hosts under the `d.pboehm.de` domain (e.g `test.d.pboehm.de`) is not available
+anymore! I did not use this service for quite some time and recently there were some issues which resulted in downtime
+and expiration of all registered hosts.
+
+### Alternatives
+
+There is at least one other hosted version of `pboehm/ddns` that
+[can be found via Google](https://www.google.com/search?q=pboehm%2Fddns+%22DDNS+is+a+project+that+lets+you+host+a+Dynamic+DNS+Service%2C+similar+to+DynDNS%2FNO-IP%2C+on+your+own+servers.%22)
+or you can host it yourself as described below.
 
 ## How can I update my IP if it changes?
 
