@@ -1,26 +1,36 @@
 package backend
 
 import (
+	"github.com/Depado/ginprom"
 	"github.com/gin-gonic/gin"
 	"github.com/pboehm/ddns/shared"
+	"github.com/prometheus/client_golang/prometheus"
 	"log"
 	"strings"
 )
 
 type Backend struct {
-	config *shared.Config
-	lookup *HostLookup
+	config   *shared.Config
+	lookup   *HostLookup
+	registry *prometheus.Registry
 }
 
-func NewBackend(config *shared.Config, lookup *HostLookup) *Backend {
+func NewBackend(config *shared.Config, lookup *HostLookup, registry *prometheus.Registry) *Backend {
 	return &Backend{
-		config: config,
-		lookup: lookup,
+		config:   config,
+		lookup:   lookup,
+		registry: registry,
 	}
 }
 
 func (b *Backend) Run() error {
+	prom := ginprom.New(ginprom.Namespace("ddns"),
+		ginprom.Subsystem("backend"), ginprom.Registry(b.registry))
+
 	r := gin.New()
+	r.Use(prom.Instrument())
+	prom.Use(r)
+
 	r.Use(gin.Recovery())
 
 	if b.config.Verbose {

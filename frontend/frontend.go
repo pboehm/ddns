@@ -2,8 +2,10 @@ package frontend
 
 import (
 	"fmt"
+	"github.com/Depado/ginprom"
 	"github.com/gin-gonic/gin"
 	"github.com/pboehm/ddns/shared"
+	"github.com/prometheus/client_golang/prometheus"
 	"html/template"
 	"log"
 	"net"
@@ -12,26 +14,34 @@ import (
 )
 
 type Frontend struct {
-	config *shared.Config
-	hosts  shared.HostBackend
+	config   *shared.Config
+	hosts    shared.HostBackend
+	registry *prometheus.Registry
 }
 
-func NewFrontend(config *shared.Config, hosts shared.HostBackend) *Frontend {
+func NewFrontend(config *shared.Config, hosts shared.HostBackend, registry *prometheus.Registry) *Frontend {
 	return &Frontend{
-		config: config,
-		hosts:  hosts,
+		config:   config,
+		hosts:    hosts,
+		registry: registry,
 	}
 }
 
 func (f *Frontend) Run() error {
+	prom := ginprom.New(ginprom.Namespace("ddns"),
+		ginprom.Subsystem("frontend"), ginprom.Registry(f.registry))
+
 	r := gin.New()
+	r.Use(prom.Instrument())
+	prom.Engine = r // we don't want to expose the metrics on the frontend, so we are not using `prom.Use(r)`
+
 	r.Use(gin.Recovery())
 
 	if f.config.Verbose {
 		r.Use(gin.Logger())
 	}
 
-	r.SetHTMLTemplate(buildTemplate())
+	r.SetHTMLTemplate(buildTemplate(f.config.CustomTemplatePath))
 
 	r.GET("/", func(g *gin.Context) {
 		g.HTML(200, "index.html", gin.H{"domain": f.config.Domain})
@@ -143,10 +153,18 @@ func extractRemoteAddr(req *http.Request) (string, error) {
 }
 
 // Get index template from bindata
-func buildTemplate() *template.Template {
-	html, err := template.New("index.html").Parse(indexTemplate)
+func buildTemplate(customTemplatePath string) *template.Template {
+	var html *template.Template
+	var err error
+
+	if customTemplatePath != "" {
+		html, err = template.ParseFiles(customTemplatePath)
+	} else {
+		html, err = template.New("index.html").Parse(indexTemplate)
+	}
+
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error parsing frontend template: %v", err)
 	}
 
 	return html

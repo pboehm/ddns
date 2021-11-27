@@ -2,5 +2,6 @@
 /docker/docker-compose.*.yml
 /ddns
 dump.rdb
+index.html
 /docker/.caddy_mount/
 /docker/.redis_mount/

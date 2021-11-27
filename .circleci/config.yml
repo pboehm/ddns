@@ -18,7 +18,7 @@ jobs:
       - checkout
       - docker/build:
           image: pboehm/ddns
-          dockerfile: docker/ddns/Dockerfile
+          dockerfile: Dockerfile
 
   docker-build-and-push:
     executor: docker/docker
@@ -28,7 +28,7 @@ jobs:
       - docker/check
       - docker/build:
           image: pboehm/ddns
-          dockerfile: docker/ddns/Dockerfile
+          dockerfile: Dockerfile
           tag: $CIRCLE_SHA1,latest
       - docker/push:
           image: pboehm/ddns
